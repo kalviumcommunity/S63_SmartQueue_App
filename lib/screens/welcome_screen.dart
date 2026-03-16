@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/primary_button.dart';
+import 'responsive_home.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -75,6 +76,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       _isReadyMode = !_isReadyMode;
                     });
                   },
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ResponsiveHomeScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.dashboard_rounded),
+                  label: const Text('Go to Dashboard'),
                 ),
               ],
             ),

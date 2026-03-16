@@ -13,6 +13,7 @@ lib/
 │   └── task.dart
 ├── screens/                  # UI pages
 │   ├── auth_screen.dart
+│   ├── responsive_home.dart  # Main vendor dashboard (responsive)
 │   ├── task_screen.dart
 │   └── welcome_screen.dart   # Launch screen
 ├── services/                 # Backend and API integrations
@@ -21,7 +22,11 @@ lib/
 │   ├── supabase/             # Supabase configuration
 │   │   └── supabase_config.dart
 │   └── task_service.dart
-└── widgets/                 # Reusable UI components
+├── utils/                    # Shared utilities
+│   └── responsive.dart      # Breakpoints and layout helpers
+└── widgets/                  # Reusable UI components
+    ├── dashboard_action_button.dart
+    ├── order_card.dart
     ├── primary_button.dart
     ├── task_input.dart
     └── task_list.dart
@@ -61,7 +66,7 @@ flutter pub get
 flutter run
 ```
 
-The app launches into the **Welcome Screen** by default. No backend configuration is required for the welcome flow.
+The app launches into the **Welcome Screen** by default. Tap **Go to Dashboard** to open the responsive vendor dashboard. No backend configuration is required for the welcome flow.
 
 ### 4. Optional: Supabase Backend
 
@@ -96,7 +101,68 @@ This project uses **Supabase** as the backend service instead of Firebase:
 - **Real-time** – Live updates over WebSockets
 - **Self-hostable** – Can run on your own infrastructure
 
-Supabase configuration lives in `lib/services/supabase/supabase_config.dart` and is provided via `--dart-define` for secure, environment-specific setup.
+Supabase configuration lives in `lib/services/supabase/supabase_config.dart` and is provided via `--dart-define` for secure, environment-specific setup. **This project does not use Firebase** — all backend integration is designed for Supabase.
+
+---
+
+## Responsive Design Implementation
+
+### Overview
+
+The **Responsive Home** screen (`lib/screens/responsive_home.dart`) is the main vendor dashboard. It adapts its layout for different screen sizes and orientations, so vendors can use SmartQueue on phones and tablets in both portrait and landscape.
+
+### Layout Structure
+
+The responsive dashboard has three sections:
+
+- **Header** – SmartQueue branding and "Vendor Dashboard" subtitle
+- **Main content** – Order cards showing current orders (Queued, Preparing, Ready)
+- **Bottom action area** – Buttons for "Add Order", "View Queue", and "Menu"
+
+### Device Dimension Detection
+
+Device type is determined in `lib/utils/responsive.dart` using `MediaQuery`:
+
+- **Phone**: `shortestSide < 600px` — single-column layout
+- **Tablet**: `shortestSide >= 600px` — multi-column grid
+- **Large tablet**: `shortestSide >= 900px` — 4-column grid
+
+`shortestSide` is used instead of width so both portrait and landscape are handled correctly.
+
+### Phone vs Tablet Adaptation
+
+| Screen Size | Layout | Behavior |
+|-------------|--------|----------|
+| **Phone** | Single column | Order cards stack vertically; spacing and padding reduced |
+| **Tablet** | 2-column grid | Order cards shown in a grid; larger padding and icons |
+| **Large tablet** | 4-column grid | More items per row; adapted for wide screens |
+
+Spacing, padding, icon sizes, and card aspect ratios all depend on `Responsive.padding()` and `Responsive.gridColumns()` so the UI scales with screen size.
+
+### Orientation Support
+
+The layout supports **portrait** and **landscape**:
+
+- `Responsive.isPortrait()` adjusts grid aspect ratios
+- In landscape on tablets, more columns fit; content reorganizes instead of stretching
+- The bottom action area adapts so buttons remain usable in both orientations
+
+### Why Responsive Design Matters for Mobile
+
+- **Vendors use different devices** — phones on the go, tablets at the stall
+- **No overflow** — layout avoids clipped or stretched content on small screens
+- **Better tablet use** — larger screens show more orders without extra scrolling
+- **Future-ready** — the same app works on new devices without redesign
+- **Professional UX** — consistent behavior across screen sizes and orientations
+
+### Responsive Utilities
+
+Reusable helpers in `lib/utils/responsive.dart`:
+
+- `Responsive.isPhone()` / `Responsive.isTablet()` — device type
+- `Responsive.gridColumns()` — suggested grid column count
+- `Responsive.padding()` — layout padding
+- `Responsive.isPortrait()` — orientation check
 
 ---
 
