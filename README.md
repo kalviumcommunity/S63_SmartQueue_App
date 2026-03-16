@@ -1,150 +1,145 @@
-## Supabase Integration Overview
+# SmartQueue
 
-This Flutter application has been transformed into a real-time, Supabase-powered app that demonstrates:
+**SmartQueue** is a Flutter mobile app designed to help street food vendors manage orders efficiently. It provides a clean, scalable foundation for building an order management system with real-time capabilities.
 
-- Email/password authentication using Supabase Auth
-- Real-time task updates from a PostgreSQL `tasks` table
-- Clean, modular architecture suitable for scaling
+---
 
-### Why Supabase instead of Firebase
+## Flutter Folder Structure
 
-- **SQL Database (PostgreSQL)**: Supabase uses PostgreSQL, which provides powerful relational data modeling, joins, and SQL tooling. This is often a better fit for production systems than a purely document-based store.
-- **Integrated Auth + Database**: Auth and database are tightly integrated with row-level security (RLS), making it straightforward to enforce per-user access rules.
-- **First-class real-time**: Supabase streams database changes over websockets, making it easy to build reactive UIs without custom sync logic.
-- **Open source & self-hostable**: Supabase can be self-hosted or used as a managed service, giving flexibility over cost and deployment.
+```
+lib/
+├── main.dart                 # App entry point and root widget
+├── models/                   # Data structures
+│   └── task.dart
+├── screens/                  # UI pages
+│   ├── auth_screen.dart
+│   ├── task_screen.dart
+│   └── welcome_screen.dart   # Launch screen
+├── services/                 # Backend and API integrations
+│   ├── auth_service.dart
+│   ├── supabase_client.dart
+│   ├── supabase/             # Supabase configuration
+│   │   └── supabase_config.dart
+│   └── task_service.dart
+└── widgets/                 # Reusable UI components
+    ├── primary_button.dart
+    ├── task_input.dart
+    └── task_list.dart
+```
 
-### How Supabase is connected to Flutter
+---
 
-1. **Dependency**  
-   The `supabase_flutter` package is added in `pubspec.yaml`:
+## Directory Descriptions
 
-   ```yaml
-   dependencies:
-     supabase_flutter: ^2.6.0
-   ```
+| Directory  | Purpose |
+|-----------|---------|
+| **screens** | Full-page UI screens (Welcome, Auth, Task list). Each screen is a self-contained widget. |
+| **widgets** | Reusable UI components such as buttons, inputs, and lists. Kept small and composable. |
+| **models** | Plain data structures and mapping logic (e.g. `Task`, `fromMap`, `toInsertMap`). |
+| **services** | Backend/API logic. Handles Supabase initialization, auth, and database operations. Business logic stays here, separate from UI. |
 
-2. **Configuration**  
-   The Supabase project URL and anon key are defined in `lib/config/supabase_config.dart`:
+---
 
-   ```dart
-   class SupabaseConfig {
-     static const String supabaseUrl = 'https://YOUR-PROJECT-URL.supabase.co';
-     static const String supabaseAnonKey = 'YOUR-ANON-KEY';
-   }
-   ```
+## Setup Instructions
 
-   Replace these placeholders with your actual Supabase project URL and anon key from the Supabase dashboard.
+### 1. Install Flutter
 
-3. **Initialization on app start**  
-   In `lib/services/supabase_client.dart`, a small wrapper initializes Supabase:
+- Download Flutter: [https://flutter.dev/docs/get-started/install](https://flutter.dev/docs/get-started/install)
+- Add Flutter to your `PATH`
+- Run `flutter doctor` to verify the setup
 
-   ```dart
-   class SupabaseService {
-     static SupabaseClient get client => Supabase.instance.client;
+### 2. Get Dependencies
 
-     static Future<void> initialize() async {
-       await Supabase.initialize(
-         url: SupabaseConfig.supabaseUrl,
-         anonKey: SupabaseConfig.supabaseAnonKey,
-       );
-     }
-   }
-   ```
+```bash
+cd S63_SmartQueue_App
+flutter pub get
+```
 
-   The `main` function ensures Supabase is ready before `runApp` in `lib/main.dart`:
+### 3. Run the App
 
-   ```dart
-   Future<void> main() async {
-     WidgetsFlutterBinding.ensureInitialized();
-     await SupabaseService.initialize();
-     runApp(const SmartQueueApp());
-   }
-   ```
+```bash
+flutter run
+```
 
-### How authentication is handled
+The app launches into the **Welcome Screen** by default. No backend configuration is required for the welcome flow.
 
-- **Service layer**: `lib/services/auth_service.dart` wraps Supabase Auth and exposes:
-  - `signUp(email, password)`
-  - `signIn(email, password)`
-  - `signOut()`
-  - `authStateChanges` (stream of auth state changes)
-  - `currentSession`
+### 4. Optional: Supabase Backend
 
-- **UI flow**:
-  - `SmartQueueApp` (`lib/main.dart`) listens to `authStateChanges`. If there is **no** active session, it shows `AuthScreen`. If there **is** a session, it shows `TaskScreen`.
-  - `AuthScreen` (`lib/screens/auth_screen.dart`) provides:
-    - Email/password text fields
-    - Toggle between **Login** and **Sign Up**
-    - Error messages when auth fails (e.g., invalid credentials, network errors)
-    - Loading indicators during requests
+To enable auth and real-time tasks, configure Supabase and run with your project credentials:
 
-- **Session persistence**:
-  - The Supabase Flutter SDK automatically persists and restores sessions. When the app restarts, `currentSession` will be non-null if the user was previously logged in and the session is still valid.
+```bash
+flutter run --dart-define=SUPABASE_URL=https://YOUR-PROJECT.supabase.co --dart-define=SUPABASE_ANON_KEY=YOUR-ANON-KEY
+```
 
-### Database and real-time synchronization
+Replace `YOUR-PROJECT` and `YOUR-ANON-KEY` with values from your [Supabase dashboard](https://supabase.com/dashboard).
 
-- **Assumed table**: A PostgreSQL table named `tasks` exists in Supabase, with at least:
-  - `id` (primary key, integer)
-  - `title` (text)
-  - `created_at` (timestamp with time zone, default `now()`)
-  - `user_id` (UUID, references `auth.users.id`, optional but recommended)
+---
 
-- **Model**: `lib/models/task.dart` defines a `Task` model with helpers to:
-  - Parse from a Supabase row (`fromMap`)
-  - Build maps for insert operations (`toInsertMap`)
+## Flutter & Dart Concepts Used
 
-- **Service layer**: `lib/services/task_service.dart` encapsulates database logic:
-  - `addTask(String title)` inserts a new task associated with the authenticated `user_id`
-  - `tasksStream()` returns a `Stream<List<Task>>` using:
+- **Widgets** – Composable UI building blocks (StatelessWidget, StatefulWidget)
+- **State** – `setState()` for reactive UI updates when the button is pressed
+- **Layout** – Scaffold, AppBar, Center, Column, Padding, ConstrainedBox
+- **Material Design** – ThemeData, ColorScheme, Material 3
+- **Animations** – AnimatedContainer, AnimatedDefaultTextStyle for smooth transitions
+- **Modular structure** – Separation of screens, widgets, models, and services
+- **Package imports** – Clean imports using `package:smartqueue_app/...` style
 
-    ```dart
-    _client
-      .from('tasks')
-      .stream(primaryKey: ['id'])
-      .order('created_at')
-    ```
+---
 
-    This stream emits an updated list whenever rows are inserted/updated/deleted, giving **real-time** behavior.
+## Backend: Supabase (not Firebase)
 
-  - `fetchTasks()` can be used for one-time loads if needed.
+This project uses **Supabase** as the backend service instead of Firebase:
 
-- **Real-time UI**:
-  - `TaskScreen` (`lib/screens/task_screen.dart`) uses a `StreamBuilder<List<Task>>` around `tasksStream()` to rebuild the task list automatically whenever Supabase emits changes.
-  - No manual refresh is needed—the list updates in real time as new tasks are inserted.
+- **PostgreSQL database** – Relational data, SQL, joins
+- **Auth** – Email/password sign up and sign in
+- **Real-time** – Live updates over WebSockets
+- **Self-hostable** – Can run on your own infrastructure
 
-### UI demonstration
+Supabase configuration lives in `lib/services/supabase/supabase_config.dart` and is provided via `--dart-define` for secure, environment-specific setup.
 
-- **Authentication UI (`AuthScreen`)**:
-  - Email and password form with validation
-  - Toggle between Login and Sign Up modes
-  - Error messages displayed in a friendly way
-  - Loading spinners during network calls
+---
 
-- **Tasks UI (`TaskScreen`)**:
-  - `TaskInput` (`lib/widgets/task_input.dart`):
-    - Text field to enter a task title
-    - Button to submit
-    - Inline error messages if task creation fails
-  - `TaskList` (`lib/widgets/task_list.dart`):
-    - `ListView` displaying tasks
-    - Shows creation time and message when there are no tasks
-  - Logout button in the AppBar to sign the user out.
+## How to Make Android Appear in "flutter run"
 
-### Project structure and maintainability
+Flutter only shows Android when an **emulator is running** or a **phone is connected**. Your SDK is already installed — you just need to start the emulator.
 
-- **Config**
-  - `lib/config/supabase_config.dart` – central place for Supabase URL and key.
-- **Services**
-  - `lib/services/supabase_client.dart` – initialization and client access.
-  - `lib/services/auth_service.dart` – authentication API wrapper.
-  - `lib/services/task_service.dart` – database and real-time tasks logic.
-- **Models**
-  - `lib/models/task.dart` – `Task` data structure and mapping helpers.
-- **Screens**
-  - `lib/screens/auth_screen.dart` – login/signup screen.
-  - `lib/screens/task_screen.dart` – authenticated task list with real-time updates.
-- **Widgets**
-  - `lib/widgets/task_input.dart` – reusable input + submit widget.
-  - `lib/widgets/task_list.dart` – reusable tasks list widget.
+### Option 1: Android Studio (recommended)
 
-This separation keeps concerns clear, makes the codebase easier to extend (for example, adding more tables or features), and aligns with clean architecture principles in Flutter.
+1. Open **Android Studio**
+2. Click **Device Manager** (phone icon in the toolbar) or **Tools → Device Manager**
+3. Find your virtual device (e.g. **Medium_Phone_API_36.1**) and click the **▶ Play** button
+4. Wait until the emulator shows the Android home screen (~1–2 minutes)
+5. Run `flutter run` — your emulator will appear in the device list
+
+### Option 2: Command line
+
+**Bash / Git Bash:**
+```bash
+bash fix_emulator.sh
+```
+
+**Command Prompt (cmd):**
+```cmd
+fix_emulator.bat
+```
+
+**PowerShell:**
+```powershell
+.\fix_emulator.bat
+```
+
+Wait for the emulator to fully boot, then run `flutter run`.
+
+### Option 3: Physical Android phone
+
+1. On your phone: **Settings → About phone** → tap **Build number** 7 times to enable Developer options
+2. **Settings → Developer options** → enable **USB debugging**
+3. Connect the phone via USB
+4. Run `flutter run` — the device will appear in the list
+
+---
+
+## Troubleshooting: "Can't find service: activity/package" on Emulator
+
+If `flutter run` fails with **"cmd: Can't find service: activity"** or **"cmd: Can't find service: package"**, the emulator is in a bad state. Use **Android Studio → Device Manager → ⋮ → Cold Boot Now** on your AVD, or run `fix_emulator.sh` / `fix_emulator.bat` and wait for a full boot.
