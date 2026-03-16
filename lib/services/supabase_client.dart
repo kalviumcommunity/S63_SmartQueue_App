@@ -5,6 +5,8 @@ import 'supabase/supabase_config.dart';
 class SupabaseService {
   static bool _initialized = false;
 
+  static bool get isInitialized => _initialized;
+
   static SupabaseClient get client {
     if (!_initialized) {
       throw StateError(

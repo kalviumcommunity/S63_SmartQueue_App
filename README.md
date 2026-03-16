@@ -1,6 +1,6 @@
 # SmartQueue
 
-**SmartQueue** is a Flutter mobile app designed to help street food vendors manage orders efficiently. It provides a clean, scalable foundation for building an order management system with real-time capabilities.
+**SmartQueue** is a Flutter mobile app that helps street food vendors manage orders efficiently and reduce long queues. It provides authentication, cloud database storage, and real-time order updates using Supabase as the backend.
 
 ---
 
@@ -8,23 +8,28 @@
 
 ```
 lib/
-├── main.dart                 # App entry point and root widget
-├── models/                   # Data structures
+├── main.dart                     # App entry point, auth gate
+├── models/                       # Data structures
+│   ├── order.dart                # Order model for vendor queue
 │   └── task.dart
-├── screens/                  # UI pages
+├── screens/                      # UI pages
 │   ├── auth_screen.dart
-│   ├── responsive_home.dart  # Main vendor dashboard (responsive)
+│   ├── login_screen.dart         # Sign-in screen
+│   ├── signup_screen.dart        # Account creation
+│   ├── vendor_dashboard_screen.dart  # Main dashboard (auth required)
+│   ├── responsive_home.dart      # Responsive demo dashboard
 │   ├── task_screen.dart
-│   └── welcome_screen.dart   # Launch screen
-├── services/                 # Backend and API integrations
-│   ├── auth_service.dart
+│   └── welcome_screen.dart       # Launch screen (when Supabase not configured)
+├── services/                     # Backend and API integrations
+│   ├── auth_service.dart         # Supabase authentication
+│   ├── order_service.dart        # Order CRUD and real-time
 │   ├── supabase_client.dart
-│   ├── supabase/             # Supabase configuration
+│   ├── supabase/
 │   │   └── supabase_config.dart
 │   └── task_service.dart
-├── utils/                    # Shared utilities
-│   └── responsive.dart      # Breakpoints and layout helpers
-└── widgets/                  # Reusable UI components
+├── utils/
+│   └── responsive.dart
+└── widgets/
     ├── dashboard_action_button.dart
     ├── order_card.dart
     ├── primary_button.dart
@@ -34,178 +39,129 @@ lib/
 
 ---
 
-## Directory Descriptions
+## Supabase Authentication Integration
 
-| Directory  | Purpose |
-|-----------|---------|
-| **screens** | Full-page UI screens (Welcome, Auth, Task list). Each screen is a self-contained widget. |
-| **widgets** | Reusable UI components such as buttons, inputs, and lists. Kept small and composable. |
-| **models** | Plain data structures and mapping logic (e.g. `Task`, `fromMap`, `toInsertMap`). |
-| **services** | Backend/API logic. Handles Supabase initialization, auth, and database operations. Business logic stays here, separate from UI. |
+SmartQueue uses **Supabase Auth** for user sign-in and sign-up:
+
+- **Login** (`lib/screens/login_screen.dart`) – Email and password fields, validates credentials, redirects to dashboard on success.
+- **Sign Up** (`lib/screens/signup_screen.dart`) – Creates new accounts, redirects to dashboard after signup.
+- **Session persistence** – Supabase SDK stores the session locally. Users stay logged in after closing and reopening the app.
+- **Auth gate** – `main.dart` uses `StreamBuilder<AuthState>` to show `LoginScreen` when logged out and `VendorDashboardScreen` when logged in.
+
+The `AuthService` (`lib/services/auth_service.dart`) wraps Supabase Auth and exposes `signIn`, `signUp`, `signOut`, `currentSession`, and `authStateChanges`.
+
+---
+
+## Database CRUD Functionality
+
+Orders are stored in a Supabase PostgreSQL table. The `OrderService` (`lib/services/order_service.dart`) provides:
+
+| Operation | Method | Description |
+|-----------|--------|-------------|
+| **Create** | `addOrder(title, status)` | Inserts a new order with optional status (default: Queued) |
+| **Read** | `fetchOrders()` | Fetches all orders for the current user |
+| **Update** | `updateOrder(order)` | Updates title and/or status of an existing order |
+| **Delete** | `deleteOrder(id)` | Removes an order by id |
+
+Row Level Security (RLS) ensures users only access their own orders. The `Order` model (`lib/models/order.dart`) maps between Dart objects and Supabase rows.
+
+---
+
+## Real-Time Data Updates
+
+Orders use Supabase Realtime so the UI updates automatically when data changes:
+
+- `OrderService.ordersStream()` returns a `Stream<List<Order>>` that listens to the `orders` table.
+- The vendor dashboard uses `StreamBuilder<List<Order>>` to rebuild when orders are added, updated, or deleted.
+- No manual refresh is needed; changes from other devices or the Supabase dashboard appear immediately.
+
+Enable Realtime for the `orders` table in **Supabase Dashboard → Database → Replication** by adding it to the `supabase_realtime` publication.
 
 ---
 
 ## Setup Instructions
 
-### 1. Install Flutter
+### 1. Prerequisites
 
-- Download Flutter: [https://flutter.dev/docs/get-started/install](https://flutter.dev/docs/get-started/install)
-- Add Flutter to your `PATH`
-- Run `flutter doctor` to verify the setup
+- [Flutter](https://flutter.dev/docs/get-started/install) installed and on `PATH`
+- A [Supabase](https://supabase.com) project
 
-### 2. Get Dependencies
+### 2. Create the Tasks Table
 
-```bash
-cd S63_SmartQueue_App
-flutter pub get
+In your Supabase project, open **SQL Editor** and run the contents of `supabase/migrations/000_create_tasks_table.sql`. Or tap **Open Supabase SQL Editor** from the in-app error screen, then paste and run:
+
+```sql
+CREATE TABLE IF NOT EXISTS public.tasks (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Queued',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all for tasks" ON public.tasks;
+CREATE POLICY "Allow all for tasks" ON public.tasks FOR ALL USING (true) WITH CHECK (true);
 ```
 
-### 3. Run the App
+### 3. Configure Supabase Credentials
 
-```bash
-flutter run
-```
+Copy your project URL and anon key from **Supabase Dashboard → Settings → API**. Either:
 
-The app launches into the **Welcome Screen** by default. Tap **Go to Dashboard** to open the responsive vendor dashboard. No backend configuration is required for the welcome flow.
-
-### 4. Optional: Supabase Backend
-
-To enable auth and real-time tasks, configure Supabase and run with your project credentials:
+- Use the default config in `lib/services/supabase/supabase_config.dart` (for local dev), or  
+- Run with `--dart-define`:
 
 ```bash
 flutter run --dart-define=SUPABASE_URL=https://YOUR-PROJECT.supabase.co --dart-define=SUPABASE_ANON_KEY=YOUR-ANON-KEY
 ```
 
-Replace `YOUR-PROJECT` and `YOUR-ANON-KEY` with values from your [Supabase dashboard](https://supabase.com/dashboard).
+### 4. Run the App
 
----
-
-## Flutter & Dart Concepts Used
-
-- **Widgets** – Composable UI building blocks (StatelessWidget, StatefulWidget)
-- **State** – `setState()` for reactive UI updates when the button is pressed
-- **Layout** – Scaffold, AppBar, Center, Column, Padding, ConstrainedBox
-- **Material Design** – ThemeData, ColorScheme, Material 3
-- **Animations** – AnimatedContainer, AnimatedDefaultTextStyle for smooth transitions
-- **Modular structure** – Separation of screens, widgets, models, and services
-- **Package imports** – Clean imports using `package:smartqueue_app/...` style
-
----
-
-## Backend: Supabase (not Firebase)
-
-This project uses **Supabase** as the backend service instead of Firebase:
-
-- **PostgreSQL database** – Relational data, SQL, joins
-- **Auth** – Email/password sign up and sign in
-- **Real-time** – Live updates over WebSockets
-- **Self-hostable** – Can run on your own infrastructure
-
-Supabase configuration lives in `lib/services/supabase/supabase_config.dart` and is provided via `--dart-define` for secure, environment-specific setup. **This project does not use Firebase** — all backend integration is designed for Supabase.
-
----
-
-## Responsive Design Implementation
-
-### Overview
-
-The **Responsive Home** screen (`lib/screens/responsive_home.dart`) is the main vendor dashboard. It adapts its layout for different screen sizes and orientations, so vendors can use SmartQueue on phones and tablets in both portrait and landscape.
-
-### Layout Structure
-
-The responsive dashboard has three sections:
-
-- **Header** – SmartQueue branding and "Vendor Dashboard" subtitle
-- **Main content** – Order cards showing current orders (Queued, Preparing, Ready)
-- **Bottom action area** – Buttons for "Add Order", "View Queue", and "Menu"
-
-### Device Dimension Detection
-
-Device type is determined in `lib/utils/responsive.dart` using `MediaQuery`:
-
-- **Phone**: `shortestSide < 600px` — single-column layout
-- **Tablet**: `shortestSide >= 600px` — multi-column grid
-- **Large tablet**: `shortestSide >= 900px` — 4-column grid
-
-`shortestSide` is used instead of width so both portrait and landscape are handled correctly.
-
-### Phone vs Tablet Adaptation
-
-| Screen Size | Layout | Behavior |
-|-------------|--------|----------|
-| **Phone** | Single column | Order cards stack vertically; spacing and padding reduced |
-| **Tablet** | 2-column grid | Order cards shown in a grid; larger padding and icons |
-| **Large tablet** | 4-column grid | More items per row; adapted for wide screens |
-
-Spacing, padding, icon sizes, and card aspect ratios all depend on `Responsive.padding()` and `Responsive.gridColumns()` so the UI scales with screen size.
-
-### Orientation Support
-
-The layout supports **portrait** and **landscape**:
-
-- `Responsive.isPortrait()` adjusts grid aspect ratios
-- In landscape on tablets, more columns fit; content reorganizes instead of stretching
-- The bottom action area adapts so buttons remain usable in both orientations
-
-### Why Responsive Design Matters for Mobile
-
-- **Vendors use different devices** — phones on the go, tablets at the stall
-- **No overflow** — layout avoids clipped or stretched content on small screens
-- **Better tablet use** — larger screens show more orders without extra scrolling
-- **Future-ready** — the same app works on new devices without redesign
-- **Professional UX** — consistent behavior across screen sizes and orientations
-
-### Responsive Utilities
-
-Reusable helpers in `lib/utils/responsive.dart`:
-
-- `Responsive.isPhone()` / `Responsive.isTablet()` — device type
-- `Responsive.gridColumns()` — suggested grid column count
-- `Responsive.padding()` — layout padding
-- `Responsive.isPortrait()` — orientation check
-
----
-
-## How to Make Android Appear in "flutter run"
-
-Flutter only shows Android when an **emulator is running** or a **phone is connected**. Your SDK is already installed — you just need to start the emulator.
-
-### Option 1: Android Studio (recommended)
-
-1. Open **Android Studio**
-2. Click **Device Manager** (phone icon in the toolbar) or **Tools → Device Manager**
-3. Find your virtual device (e.g. **Medium_Phone_API_36.1**) and click the **▶ Play** button
-4. Wait until the emulator shows the Android home screen (~1–2 minutes)
-5. Run `flutter run` — your emulator will appear in the device list
-
-### Option 2: Command line
-
-**Bash / Git Bash:**
 ```bash
-bash fix_emulator.sh
+cd S63_SmartQueue_App
+flutter pub get
+flutter run
 ```
 
-**Command Prompt (cmd):**
-```cmd
-fix_emulator.bat
-```
-
-**PowerShell:**
-```powershell
-.\fix_emulator.bat
-```
-
-Wait for the emulator to fully boot, then run `flutter run`.
-
-### Option 3: Physical Android phone
-
-1. On your phone: **Settings → About phone** → tap **Build number** 7 times to enable Developer options
-2. **Settings → Developer options** → enable **USB debugging**
-3. Connect the phone via USB
-4. Run `flutter run` — the device will appear in the list
+- If Supabase is configured: You see the **Login** screen. Sign up or log in, then you are taken to the **Vendor Dashboard**.
+- If Supabase is not configured: You see the **Welcome** screen. Tap **Go to Dashboard** for the responsive demo (no backend).
 
 ---
 
-## Troubleshooting: "Can't find service: activity/package" on Emulator
+## Project Architecture
 
-If `flutter run` fails with **"cmd: Can't find service: activity"** or **"cmd: Can't find service: package"**, the emulator is in a bad state. Use **Android Studio → Device Manager → ⋮ → Cold Boot Now** on your AVD, or run `fix_emulator.sh` / `fix_emulator.bat` and wait for a full boot.
+| Layer | Responsibility |
+|-------|----------------|
+| **screens** | Full-page UI: login, signup, dashboard, welcome |
+| **widgets** | Reusable components (OrderCard, buttons, etc.) |
+| **models** | Data structures (Order, Task) and JSON mapping |
+| **services** | Supabase auth, order CRUD, real-time streams |
+| **utils** | Shared helpers (e.g. responsive breakpoints) |
+
+UI logic is separated from backend logic; services handle all Supabase interaction.
+
+---
+
+## Supabase vs Traditional Backend Development
+
+Supabase simplifies building cloud-connected apps:
+
+1. **Auth** – Email/password, OAuth, and magic links without a custom auth server.
+2. **Database** – PostgreSQL with real-time subscriptions instead of REST polling.
+3. **RLS** – Row-level security replaces many custom authorization checks.
+4. **SDK** – Flutter package with streams and type-safe queries.
+
+This reduces the need for custom APIs, server deployment, and manual sync logic. **This project does not use Firebase** — all backend features are implemented with Supabase.
+
+---
+
+## Responsive Design
+
+The dashboard and related screens use `lib/utils/responsive.dart` to adapt layout for phones and tablets. See the responsive design section in earlier documentation for details on breakpoints and layout behavior.
+
+---
+
+## Android Emulator
+
+To run on Android, start an emulator first (e.g. via Android Studio Device Manager), then run `flutter run`. If you see "Can't find service: activity/package", use `bash fix_emulator.sh` or cold boot the emulator.
