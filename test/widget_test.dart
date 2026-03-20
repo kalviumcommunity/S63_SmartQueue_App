@@ -13,7 +13,7 @@ import 'package:smartqueue_app/main.dart';
 void main() {
   testWidgets('App builds without crashing', (WidgetTester tester) async {
     // Build the root app widget and trigger a frame.
-    await tester.pumpWidget(const SmartQueueApp(supabaseReady: false));
+    await tester.pumpWidget(const SmartQueueApp(firebaseReady: false));
 
     // Verify that at least one widget is found in the tree.
     expect(find.byType(MaterialApp), findsOneWidget);

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/auth_service.dart';
 import 'login_screen.dart';
-import 'vendor_dashboard_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -41,25 +40,39 @@ class _SignupScreenState extends State<SignupScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      await _authService.signOut();
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully! Please login.'),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => const VendorDashboardScreen(),
+            builder: (_) => const LoginScreen(),
           ),
         );
       }
     } catch (error) {
       String message = 'Something went wrong. Please try again.';
-      if (error is AuthException) {
-        final errMsg = error.message.toLowerCase();
-        if (errMsg.contains('over_email_send_rate_limit') ||
-            errMsg.contains('rate limit')) {
-          message =
-              'Too many sign-up requests. Please wait a minute and try again.';
-        } else if (errMsg.contains('email not confirmed')) {
-          message = 'Check your email for the confirmation link.';
-        } else {
-          message = error.message;
+      if (error is FirebaseAuthException) {
+        switch (error.code) {
+          case 'email-already-in-use':
+            message = 'This email is already registered. Try logging in.';
+            break;
+          case 'too-many-requests':
+            message =
+                'Too many sign-up requests. Please wait a minute and try again.';
+            break;
+          case 'weak-password':
+            message = 'Password is too weak. Use at least 6 characters.';
+            break;
+          case 'invalid-email':
+            message = 'Please enter a valid email address.';
+            break;
+          default:
+            message = error.message ?? message;
         }
       }
       if (mounted) {
