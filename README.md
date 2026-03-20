@@ -10,17 +10,18 @@ This project serves as both a functional application and a learning resource for
 
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
-3. [Multi-Screen Navigation](#multi-screen-navigation)
-4. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-5. [Widget Tree Concept](#widget-tree-concept)
-6. [Reactive UI Model](#reactive-ui-model)
-7. [Setup Steps Documentation](#setup-steps-documentation)
-8. [Setup Verification](#setup-verification)
-9. [Folder Structure Explanation](#folder-structure-explanation)
-10. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-11. [Flutter Development Tools](#flutter-development-tools)
-12. [Reflection](#reflection)
-13. [Quick Reference Commands](#quick-reference-commands)
+3. [Responsive Layout Design](#responsive-layout-design)
+4. [Multi-Screen Navigation](#multi-screen-navigation)
+5. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+6. [Widget Tree Concept](#widget-tree-concept)
+7. [Reactive UI Model](#reactive-ui-model)
+8. [Setup Steps Documentation](#setup-steps-documentation)
+9. [Setup Verification](#setup-verification)
+10. [Folder Structure Explanation](#folder-structure-explanation)
+11. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+12. [Flutter Development Tools](#flutter-development-tools)
+13. [Reflection](#reflection)
+14. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -75,6 +76,543 @@ Understanding the Flutter project structure is fundamental for:
 6. **Onboarding**: Help new team members understand the codebase quickly
 
 A well-organized project structure is not just about aesthetics—it directly impacts development speed, code maintainability, and team productivity. Investing time in understanding and implementing proper structure pays dividends throughout the project lifecycle.
+
+---
+
+## Responsive Layout Design
+
+This section demonstrates how to create responsive, adaptive user interfaces using Flutter's core layout widgets: **Container**, **Row**, and **Column**.
+
+### Overview
+
+Responsive design ensures that applications look great and function well across all device sizes—from small phones to large tablets. Flutter provides powerful layout widgets that make building responsive UIs straightforward.
+
+**Location**: `lib/screens/layout/responsive_layout_screen.dart`
+
+The SmartQueue project includes a comprehensive responsive layout demo that showcases:
+- Adaptive layouts using LayoutBuilder
+- Container for styling and constraints
+- Row for horizontal arrangements
+- Column for vertical arrangements
+- Expanded and Flexible for proportional sizing
+
+---
+
+### Core Layout Widgets
+
+#### Container
+
+The **Container** widget is the most versatile layout widget. It can apply:
+- Padding and margin
+- Background decoration (color, gradient, border, shadow)
+- Size constraints (width, height, min/max)
+- Alignment of child widget
+
+```dart
+Container(
+  // Padding inside the container
+  padding: const EdgeInsets.all(20),
+  
+  // Margin outside the container
+  margin: const EdgeInsets.symmetric(horizontal: 16),
+  
+  // Visual decoration
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.05),
+        blurRadius: 10,
+        offset: const Offset(0, 4),
+      ),
+    ],
+  ),
+  
+  // Child widget
+  child: Text('Content goes here'),
+)
+```
+
+**Use Cases in SmartQueue:**
+| Use Case | Container Properties |
+|----------|---------------------|
+| Card styling | `decoration`, `padding`, `borderRadius` |
+| Gradient header | `decoration` with `LinearGradient` |
+| Icon backgrounds | `padding`, `color`, `shape` |
+| Progress bars | `height`, `width`, `decoration` |
+| Status badges | `padding`, `color`, `borderRadius` |
+
+---
+
+#### Row
+
+The **Row** widget arranges children horizontally (left to right). It's essential for creating side-by-side layouts.
+
+```dart
+Row(
+  // How to align children horizontally
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  
+  // How to align children vertically
+  crossAxisAlignment: CrossAxisAlignment.center,
+  
+  children: [
+    // Logo
+    Container(
+      padding: const EdgeInsets.all(12),
+      child: Icon(Icons.store),
+    ),
+    
+    // Title - Expanded takes remaining space
+    Expanded(
+      child: Text('SmartQueue Dashboard'),
+    ),
+    
+    // Action buttons
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(icon: Icon(Icons.notifications)),
+        IconButton(icon: Icon(Icons.settings)),
+      ],
+    ),
+  ],
+)
+```
+
+**Row Alignment Options:**
+
+| MainAxisAlignment | Description |
+|-------------------|-------------|
+| `start` | Children at the beginning (left) |
+| `end` | Children at the end (right) |
+| `center` | Children in the center |
+| `spaceBetween` | Even space between children |
+| `spaceAround` | Equal space around each child |
+| `spaceEvenly` | Equal space between and around |
+
+---
+
+#### Column
+
+The **Column** widget arranges children vertically (top to bottom). It's the foundation for most screen layouts.
+
+```dart
+Column(
+  // How to align children vertically
+  mainAxisAlignment: MainAxisAlignment.start,
+  
+  // How to align children horizontally
+  crossAxisAlignment: CrossAxisAlignment.stretch,
+  
+  children: [
+    // Header Section
+    _buildHeader(),
+    
+    // Spacing
+    const SizedBox(height: 24),
+    
+    // Stats Section
+    _buildStatsSection(),
+    
+    // Spacing
+    const SizedBox(height: 24),
+    
+    // Main Content
+    _buildMainContent(),
+  ],
+)
+```
+
+**Column Alignment Options:**
+
+| CrossAxisAlignment | Description |
+|--------------------|-------------|
+| `start` | Children at the left |
+| `end` | Children at the right |
+| `center` | Children in the center |
+| `stretch` | Children fill full width |
+
+---
+
+### Implementing Responsive Behavior
+
+#### Using LayoutBuilder
+
+**LayoutBuilder** provides the parent widget's constraints, allowing you to make layout decisions based on available space.
+
+```dart
+LayoutBuilder(
+  builder: (context, constraints) {
+    // Get available width
+    final screenWidth = constraints.maxWidth;
+    
+    // Determine layout based on width
+    final isWideScreen = screenWidth > 600;
+    final isTablet = screenWidth > 900;
+    
+    return Column(
+      children: [
+        // Adjust padding based on screen size
+        Padding(
+          padding: EdgeInsets.all(isWideScreen ? 24.0 : 16.0),
+          child: _buildContent(isWideScreen, isTablet),
+        ),
+      ],
+    );
+  },
+)
+```
+
+#### Screen Size Breakpoints
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SCREEN SIZE BREAKPOINTS                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ┌─────────────┬─────────────┬─────────────┐                  │
+│   │   Phone     │   Tablet    │   Desktop   │                  │
+│   │  < 600px    │  600-900px  │   > 900px   │                  │
+│   └─────────────┴─────────────┴─────────────┘                  │
+│                                                                 │
+│   Layout Behavior:                                              │
+│                                                                 │
+│   Phone (< 600px):                                              │
+│   • Single column layout                                        │
+│   • Stacked sections (Column)                                   │
+│   • Compact spacing (16px)                                      │
+│   • 2x2 stat card grid                                         │
+│                                                                 │
+│   Tablet (600-900px):                                           │
+│   • Mixed layout                                                │
+│   • 4 stat cards in row                                        │
+│   • Increased spacing (24px)                                    │
+│   • Side-by-side panels                                        │
+│                                                                 │
+│   Desktop (> 900px):                                            │
+│   • Multi-column layout                                         │
+│   • Expanded content areas                                      │
+│   • Maximum spacing (32px)                                      │
+│   • Full dashboard view                                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Adaptive Layout Examples
+
+#### Stats Section - Row vs Column
+
+**Phone Layout (< 600px):** 2x2 Grid using nested Row and Column
+
+```dart
+// Phone: 2x2 grid layout
+Column(
+  children: [
+    Row(
+      children: [
+        Expanded(child: _buildStatCard('Orders', '47')),
+        const SizedBox(width: 12),
+        Expanded(child: _buildStatCard('Queue', '12')),
+      ],
+    ),
+    const SizedBox(height: 12),
+    Row(
+      children: [
+        Expanded(child: _buildStatCard('Complete', '35')),
+        const SizedBox(width: 12),
+        Expanded(child: _buildStatCard('Revenue', '\$1,234')),
+      ],
+    ),
+  ],
+)
+```
+
+**Wide Screen (>= 600px):** Single Row with Expanded children
+
+```dart
+// Tablet/Desktop: Single row layout
+Row(
+  children: [
+    Expanded(child: _buildStatCard('Orders', '47')),
+    const SizedBox(width: 12),
+    Expanded(child: _buildStatCard('Queue', '12')),
+    const SizedBox(width: 12),
+    Expanded(child: _buildStatCard('Complete', '35')),
+    const SizedBox(width: 12),
+    Expanded(child: _buildStatCard('Revenue', '\$1,234')),
+  ],
+)
+```
+
+#### Main Panels - Side by Side vs Stacked
+
+```dart
+Widget _buildMainPanels(bool isTablet) {
+  if (isTablet) {
+    // Tablet: Side-by-side with flex ratios
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 60% width
+        Expanded(
+          flex: 6,
+          child: _buildOrdersPanel(),
+        ),
+        const SizedBox(width: 20),
+        // 40% width
+        Expanded(
+          flex: 4,
+          child: _buildQueuePanel(),
+        ),
+      ],
+    );
+  } else {
+    // Phone: Stacked vertically
+    return Column(
+      children: [
+        _buildOrdersPanel(),
+        const SizedBox(height: 16),
+        _buildQueuePanel(),
+      ],
+    );
+  }
+}
+```
+
+---
+
+### Flexible Layout Techniques
+
+#### Using Expanded
+
+**Expanded** forces a child to fill remaining space in a Row or Column.
+
+```dart
+Row(
+  children: [
+    Container(width: 50, child: Icon(Icons.store)),
+    
+    // Expanded: Takes ALL remaining horizontal space
+    Expanded(
+      child: Text('This text expands to fill available space'),
+    ),
+    
+    Container(width: 40, child: Icon(Icons.arrow_forward)),
+  ],
+)
+```
+
+#### Using Flex Ratios
+
+```dart
+Row(
+  children: [
+    // Takes 2/3 of available space
+    Expanded(
+      flex: 2,
+      child: _buildMainPanel(),
+    ),
+    const SizedBox(width: 16),
+    // Takes 1/3 of available space
+    Expanded(
+      flex: 1,
+      child: _buildSidePanel(),
+    ),
+  ],
+)
+```
+
+#### Avoiding Fixed Sizes
+
+```dart
+// ❌ BAD: Fixed width breaks on different screens
+Container(
+  width: 350,
+  child: _buildContent(),
+)
+
+// ✓ GOOD: Use constraints or Expanded
+Expanded(
+  child: Container(
+    constraints: BoxConstraints(maxWidth: 400),
+    child: _buildContent(),
+  ),
+)
+```
+
+---
+
+### SmartQueue Responsive Layout Demo
+
+The demo screen (`lib/screens/layout/responsive_layout_screen.dart`) includes:
+
+| Section | Widgets Used | Responsive Behavior |
+|---------|-------------|---------------------|
+| **Header** | Container, Row, Column | Padding adjusts, icons hide on small screens |
+| **Quick Stats** | Row/Column, Expanded | 4-in-row on wide, 2x2 grid on phone |
+| **Main Panels** | Row/Column, Expanded with flex | Side-by-side on tablet, stacked on phone |
+| **Quick Actions** | Row, Expanded | Always row with equal distribution |
+| **Info Card** | Container, Column | Full width, displays current screen info |
+
+#### Reusable Layout Components
+
+The project also includes reusable responsive widgets in `lib/widgets/layout/responsive_builder.dart`:
+
+```dart
+// ResponsiveBuilder - Different layouts per screen size
+ResponsiveBuilder(
+  phone: (context, constraints) => PhoneLayout(),
+  tablet: (context, constraints) => TabletLayout(),
+  desktop: (context, constraints) => DesktopLayout(),
+)
+
+// ResponsiveRowColumn - Automatic Row/Column switching
+ResponsiveRowColumn(
+  spacing: 16,
+  breakpoint: 600,
+  children: [Widget1(), Widget2(), Widget3()],
+)
+
+// ResponsiveGrid - Adaptive grid columns
+ResponsiveGrid(
+  phoneColumns: 1,
+  tabletColumns: 2,
+  desktopColumns: 3,
+  children: [...items],
+)
+```
+
+---
+
+### Visual Evidence
+
+> **Screenshot Placeholder**: [Insert Screenshot - Phone Layout]
+> 
+> *Shows the responsive layout demo on a phone-sized screen with stacked sections, 2x2 stat grid, and compact spacing*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Tablet Layout]
+> 
+> *Shows the responsive layout demo on a tablet-sized screen with side-by-side panels, 4-stat row, and expanded spacing*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Landscape Mode]
+> 
+> *Shows the layout adapting when device is rotated to landscape orientation*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Layout Info Card]
+> 
+> *Shows the educational info card displaying current screen width and widgets being used*
+
+---
+
+### Layout Comparison: Phone vs Tablet
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                           LAYOUT COMPARISON                                │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│   PHONE (< 600px)                    TABLET (>= 600px)                    │
+│   ┌──────────────┐                   ┌────────────────────────────┐       │
+│   │   Header     │                   │         Header             │       │
+│   ├──────────────┤                   ├────────────────────────────┤       │
+│   │ Stat │ Stat  │                   │ Stat │ Stat │ Stat │ Stat │       │
+│   ├──────┼───────┤                   ├──────┴──────┴──────┴──────┤       │
+│   │ Stat │ Stat  │                   │                            │       │
+│   ├──────┴───────┤                   │ ┌────────────┬───────────┐ │       │
+│   │              │                   │ │            │           │ │       │
+│   │   Orders     │                   │ │   Orders   │   Queue   │ │       │
+│   │   Panel      │                   │ │   Panel    │   Panel   │ │       │
+│   │              │                   │ │            │           │ │       │
+│   ├──────────────┤                   │ └────────────┴───────────┘ │       │
+│   │              │                   │                            │       │
+│   │   Queue      │                   │ ┌────────────┬───────────┐ │       │
+│   │   Panel      │                   │ │   Quick    │   Top     │ │       │
+│   │              │                   │ │  Actions   │  Selling  │ │       │
+│   ├──────────────┤                   │ └────────────┴───────────┘ │       │
+│   │Quick Actions │                   │                            │       │
+│   ├──────────────┤                   │ ┌────────────────────────┐ │       │
+│   │ Top Selling  │                   │ │      Info Card         │ │       │
+│   ├──────────────┤                   │ └────────────────────────┘ │       │
+│   │  Info Card   │                   └────────────────────────────┘       │
+│   └──────────────┘                                                         │
+│                                                                            │
+│   • Stacked layout (Column)          • Side-by-side layout (Row)          │
+│   • Compact spacing (16px)           • Expanded spacing (24px)            │
+│   • 2x2 stat grid                    • 4-stat row                         │
+│   • Full-width panels                • Split panels with flex ratios     │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Responsive Layout Reflection
+
+#### Why Responsive Design is Important
+
+1. **Device Diversity**
+   - Users access apps on various screen sizes (4" phones to 12" tablets)
+   - Single codebase must work well everywhere
+   - Flutter's layout system enables this efficiently
+
+2. **User Experience**
+   - Larger screens should show more content, not just scaled-up small layouts
+   - Proper spacing and proportions feel native on each device
+   - Touch targets remain appropriately sized
+
+3. **Orientation Changes**
+   - Portrait to landscape changes available width dramatically
+   - Apps should adapt gracefully without user intervention
+   - LayoutBuilder rebuilds automatically on size changes
+
+4. **Future-Proofing**
+   - New devices with different aspect ratios are released regularly
+   - Responsive design ensures compatibility without code changes
+   - Web and desktop targets require even more flexibility
+
+#### Challenges in Managing Layout Proportions
+
+1. **Avoiding Overflow**
+   - Fixed widths cause overflow on smaller screens
+   - Solution: Use Expanded, Flexible, and percentage-based sizing
+
+2. **Content Hierarchy**
+   - Deciding what content to show vs hide on smaller screens
+   - Solution: Use conditional rendering based on screen width
+
+3. **Touch Target Sizes**
+   - Buttons must remain tappable (minimum 48x48 dp)
+   - Solution: Adjust padding and spacing, not just scaling
+
+4. **Text Readability**
+   - Text scaling affects layout calculations
+   - Solution: Use flexible containers that can accommodate text changes
+
+5. **Image Scaling**
+   - Images need to scale without distortion
+   - Solution: Use BoxFit.cover/contain with AspectRatio widgets
+
+#### Future Improvements
+
+1. **Orientation-Specific Layouts**
+   - Different layouts for portrait vs landscape
+   - Even within the same device size
+
+2. **Breakpoint Customization**
+   - Allow users to configure preferred layout density
+   - Accessibility considerations for larger text
+
+3. **Animation Between Layouts**
+   - Smooth transitions when screen size changes
+   - AnimatedContainer and AnimatedCrossFade
+
+4. **Platform-Specific Adaptations**
+   - iOS vs Android design patterns
+   - Web-specific layouts with navigation rails
 
 ---
 
