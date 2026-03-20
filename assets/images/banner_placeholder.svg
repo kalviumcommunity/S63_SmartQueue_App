@@ -1,0 +1,17 @@
+<svg width="800" height="300" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bannerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1"/>
+      <stop offset="50%" style="stop-color:#8B5CF6"/>
+      <stop offset="100%" style="stop-color:#A855F7"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="300" fill="url(#bannerGradient)"/>
+  <circle cx="650" cy="150" r="100" fill="white" opacity="0.1"/>
+  <circle cx="700" cy="200" r="60" fill="white" opacity="0.1"/>
+  <circle cx="100" cy="50" r="40" fill="white" opacity="0.1"/>
+  <text x="50" y="120" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">SmartQueue</text>
+  <text x="50" y="170" font-family="Arial, sans-serif" font-size="24" fill="white" opacity="0.9">Efficient Queue Management</text>
+  <rect x="50" y="200" width="150" height="50" rx="25" fill="white"/>
+  <text x="85" y="233" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#6366F1">Get Started</text>
+</svg>
