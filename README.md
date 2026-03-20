@@ -10,16 +10,17 @@ This project serves as both a functional application and a learning resource for
 
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
-3. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-4. [Widget Tree Concept](#widget-tree-concept)
-5. [Reactive UI Model](#reactive-ui-model)
-6. [Setup Steps Documentation](#setup-steps-documentation)
-7. [Setup Verification](#setup-verification)
-8. [Folder Structure Explanation](#folder-structure-explanation)
-9. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-10. [Flutter Development Tools](#flutter-development-tools)
-11. [Reflection](#reflection)
-12. [Quick Reference Commands](#quick-reference-commands)
+3. [Multi-Screen Navigation](#multi-screen-navigation)
+4. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+5. [Widget Tree Concept](#widget-tree-concept)
+6. [Reactive UI Model](#reactive-ui-model)
+7. [Setup Steps Documentation](#setup-steps-documentation)
+8. [Setup Verification](#setup-verification)
+9. [Folder Structure Explanation](#folder-structure-explanation)
+10. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+11. [Flutter Development Tools](#flutter-development-tools)
+12. [Reflection](#reflection)
+13. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -74,6 +75,468 @@ Understanding the Flutter project structure is fundamental for:
 6. **Onboarding**: Help new team members understand the codebase quickly
 
 A well-organized project structure is not just about aesthetics—it directly impacts development speed, code maintainability, and team productivity. Investing time in understanding and implementing proper structure pays dividends throughout the project lifecycle.
+
+---
+
+## Multi-Screen Navigation
+
+This section covers Flutter's navigation system, demonstrating how to implement multi-screen applications using Navigator and named routes.
+
+### Overview
+
+Navigation in Flutter is managed by the **Navigator** widget, which maintains a stack of routes (screens). Understanding navigation is essential for building real-world applications where users move between different screens.
+
+The SmartQueue project includes a dedicated navigation demo that showcases:
+- Multiple interconnected screens
+- Named route configuration
+- Data passing between screens
+- Various navigation methods (push, pop, replace)
+
+---
+
+### Understanding the Navigator
+
+#### What is Navigator?
+
+The **Navigator** is a widget that manages a stack of Route objects (screens). It follows the **Last In, First Out (LIFO)** principle:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    NAVIGATOR STACK                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Visual representation of navigation stack:                   │
+│                                                                 │
+│   ┌─────────────────────┐                                      │
+│   │   Order Details     │  ← TOP (Currently visible)           │
+│   ├─────────────────────┤                                      │
+│   │   Queue Screen      │  ← Previous screen                   │
+│   ├─────────────────────┤                                      │
+│   │   Home Screen       │  ← BOTTOM (First screen)             │
+│   └─────────────────────┘                                      │
+│                                                                 │
+│   Push: Adds new screen to top of stack                        │
+│   Pop: Removes current screen, reveals previous                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### How Navigation Stack Works
+
+| Action | Stack Change | Visual Result |
+|--------|-------------|---------------|
+| **Push** | New route added to top | New screen appears |
+| **Pop** | Current route removed | Previous screen revealed |
+| **Replace** | Current route swapped | New screen, no back option |
+| **Pop Until** | Routes removed until condition | Returns to specific screen |
+| **Push and Remove** | Clears stack, pushes new | Fresh navigation stack |
+
+---
+
+### Named Routes
+
+#### What are Named Routes?
+
+Named routes allow you to define routes using string identifiers instead of directly referencing widget classes. This provides better organization and scalability.
+
+#### Why Use Named Routes?
+
+| Benefit | Description |
+|---------|-------------|
+| **Centralized Configuration** | All routes defined in one place |
+| **Better Readability** | Route names are self-documenting |
+| **Easy Refactoring** | Change screen once, update everywhere |
+| **Deep Linking Ready** | String-based routes work with web URLs |
+| **Type Safety** | Route constants prevent typos |
+| **Team Collaboration** | Clear navigation contracts |
+
+#### Route Configuration
+
+The SmartQueue navigation demo defines routes in `lib/routes/app_routes.dart`:
+
+```dart
+class AppRoutes {
+  // Route name constants
+  static const String navigationHome = '/navigation-home';
+  static const String orderDetails = '/order-details';
+  static const String queue = '/queue';
+  static const String settings = '/settings';
+  static const String statistics = '/statistics';
+  static const String addOrder = '/add-order';
+
+  // Initial route
+  static const String initialRoute = navigationHome;
+
+  // Route map for MaterialApp
+  static Map<String, WidgetBuilder> get routes {
+    return {
+      navigationHome: (context) => const NavigationHomeScreen(),
+      queue: (context) => const QueueScreen(),
+      settings: (context) => const SettingsScreen(),
+      statistics: (context) => const StatisticsScreen(),
+      addOrder: (context) => const AddOrderScreen(),
+    };
+  }
+
+  // Dynamic route generator for routes with arguments
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case orderDetails:
+        return MaterialPageRoute(
+          builder: (_) => const OrderDetailsScreen(),
+          settings: settings,
+        );
+      // ... other routes
+    }
+  }
+}
+```
+
+#### Using Routes in MaterialApp
+
+```dart
+MaterialApp(
+  // Starting screen
+  initialRoute: AppRoutes.initialRoute,
+  
+  // Static routes (no arguments needed)
+  routes: AppRoutes.routes,
+  
+  // Dynamic routes (arguments supported)
+  onGenerateRoute: AppRoutes.onGenerateRoute,
+  
+  // Fallback for unknown routes
+  onUnknownRoute: AppRoutes.onUnknownRoute,
+);
+```
+
+---
+
+### Navigation Methods
+
+#### Basic Navigation
+
+```dart
+// Push: Navigate to new screen
+Navigator.pushNamed(context, '/order-details');
+
+// Pop: Go back to previous screen
+Navigator.pop(context);
+```
+
+#### Navigation with Arguments
+
+```dart
+// Push with data
+Navigator.pushNamed(
+  context,
+  '/order-details',
+  arguments: {
+    'id': 'ORD-001',
+    'title': '2x Burger, 1x Fries',
+    'status': 'Preparing',
+    'customer': 'John Doe',
+    'total': 24.99,
+  },
+);
+
+// Receiving arguments in destination screen
+@override
+Widget build(BuildContext context) {
+  final order = ModalRoute.of(context)?.settings.arguments 
+      as Map<String, dynamic>?;
+  
+  return Scaffold(
+    body: Text('Order: ${order?['id']}'),
+  );
+}
+```
+
+#### Advanced Navigation Methods
+
+| Method | Code | Use Case |
+|--------|------|----------|
+| **Push** | `Navigator.pushNamed(context, '/route')` | Add new screen to stack |
+| **Pop** | `Navigator.pop(context)` | Return to previous screen |
+| **Pop with Result** | `Navigator.pop(context, result)` | Return data to previous screen |
+| **Replace** | `Navigator.pushReplacementNamed(context, '/route')` | Replace current screen (no back) |
+| **Pop Until** | `Navigator.popUntil(context, (r) => r.isFirst)` | Return to home/root |
+| **Push and Remove** | `Navigator.pushNamedAndRemoveUntil(context, '/route', (r) => false)` | Clear stack completely |
+
+#### Example: Complete Navigation Flow
+
+```dart
+// Home Screen: Navigate to order details
+onTap: () {
+  Navigator.pushNamed(
+    context,
+    '/order-details',
+    arguments: orderData,
+  );
+}
+
+// Order Details: Navigate to queue, replacing current
+onPressed: () {
+  Navigator.pushReplacementNamed(context, '/queue');
+}
+
+// Queue: Return to home
+onPressed: () {
+  Navigator.popUntil(context, (route) => route.isFirst);
+}
+
+// Settings: Clear stack and go to login
+onPressed: () {
+  Navigator.pushNamedAndRemoveUntil(
+    context,
+    '/login',
+    (route) => false,
+  );
+}
+```
+
+---
+
+### SmartQueue Navigation Demo
+
+#### Screen Structure
+
+**Location**: `lib/screens/navigation/`
+
+| Screen | Route | Description |
+|--------|-------|-------------|
+| **NavigationHomeScreen** | `/navigation-home` | Vendor dashboard, main entry point |
+| **OrderDetailsScreen** | `/order-details` | Displays order data received via arguments |
+| **QueueScreen** | `/queue` | Shows order queue, demonstrates stack visualization |
+| **SettingsScreen** | `/settings` | App settings with navigation examples |
+| **StatisticsScreen** | `/statistics` | Statistics with deeper stack navigation |
+| **AddOrderScreen** | `/add-order` | Form with navigation returning result |
+
+#### Navigation Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│               SMARTQUEUE NAVIGATION FLOW                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                    ┌──────────────────┐                        │
+│                    │   Home Screen    │                        │
+│                    │ /navigation-home │                        │
+│                    └────────┬─────────┘                        │
+│                             │                                   │
+│          ┌──────────────────┼──────────────────┐               │
+│          │                  │                  │                │
+│          ▼                  ▼                  ▼                │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐          │
+│   │ Order       │   │   Queue     │   │  Settings   │          │
+│   │ Details     │   │  Screen     │   │   Screen    │          │
+│   │/order-details│  │   /queue    │   │  /settings  │          │
+│   └─────────────┘   └──────┬──────┘   └──────┬──────┘          │
+│          │                 │                 │                  │
+│          │                 ▼                 ▼                  │
+│          │         ┌─────────────┐   ┌─────────────┐           │
+│          │         │ Order       │   │ Statistics  │           │
+│          └────────▶│ Details     │   │   Screen    │           │
+│                    │(from queue) │   │ /statistics │           │
+│                    └─────────────┘   └─────────────┘           │
+│                                                                 │
+│   Legend:                                                       │
+│   ──▶ pushNamed (adds to stack)                                │
+│   ═══ pushReplacementNamed (replaces current)                  │
+│   ◀── pop (returns to previous)                                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Running the Navigation Demo
+
+To run the navigation demo independently:
+
+```bash
+flutter run -t lib/navigation_demo_app.dart
+```
+
+Or integrate with the main app by navigating to the Navigation Home screen.
+
+---
+
+### Passing Data Between Screens
+
+#### Sending Data
+
+```dart
+// From Home Screen - sending order data
+Navigator.pushNamed(
+  context,
+  '/order-details',
+  arguments: {
+    'id': 'ORD-001',
+    'title': '2x Burger, 1x Fries',
+    'status': 'Preparing',
+    'customer': 'John Doe',
+    'total': 24.99,
+    'time': '5 mins ago',
+  },
+);
+```
+
+#### Receiving Data
+
+```dart
+// In Order Details Screen
+@override
+Widget build(BuildContext context) {
+  // Extract arguments from route settings
+  final Map<String, dynamic>? order = 
+      ModalRoute.of(context)?.settings.arguments 
+          as Map<String, dynamic>?;
+
+  // Handle null case
+  if (order == null) {
+    return Scaffold(
+      body: Center(child: Text('No order data')),
+    );
+  }
+
+  // Use the data
+  return Scaffold(
+    appBar: AppBar(title: Text(order['id'])),
+    body: Column(
+      children: [
+        Text('Customer: ${order['customer']}'),
+        Text('Items: ${order['title']}'),
+        Text('Total: \$${order['total']}'),
+      ],
+    ),
+  );
+}
+```
+
+#### Returning Data to Previous Screen
+
+```dart
+// In Add Order Screen - return created order
+Navigator.pop(context, {
+  'id': 'ORD-NEW',
+  'title': 'New Order Items',
+  'status': 'Queued',
+});
+
+// In Home Screen - receive the result
+final result = await Navigator.pushNamed(context, '/add-order');
+if (result != null) {
+  print('New order created: ${result['id']}');
+}
+```
+
+---
+
+### Visual Evidence
+
+> **Screenshot Placeholder**: [Insert Screenshot - Home Screen]
+> 
+> *Shows the Navigation Home Screen (Vendor Dashboard) with welcome header, quick stats cards, navigation demo section with buttons for different routes, and recent orders list*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Order Details Screen]
+> 
+> *Shows the Order Details Screen displaying order data received through navigation arguments, with status header, order items, customer info, and navigation buttons*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Queue Screen]
+> 
+> *Shows the Queue Screen with order list, queue position indicators, and navigation stack visualization*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Navigation Stack Visualization]
+> 
+> *Shows the in-app navigation stack visualization displaying current screen position in the stack*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Data Passing Demo]
+> 
+> *Shows order data being displayed on the details screen after being passed from the home screen*
+
+---
+
+### Navigation Best Practices
+
+| Practice | Description |
+|----------|-------------|
+| **Use Named Routes** | Prefer named routes over direct widget navigation for scalability |
+| **Centralize Route Configuration** | Define all routes in a single file (`app_routes.dart`) |
+| **Use Route Constants** | Define route names as constants to prevent typos |
+| **Handle Null Arguments** | Always validate arguments received from navigation |
+| **Use Type-Safe Arguments** | Create typed argument classes for complex data |
+| **Avoid Deep Nesting** | Keep navigation stack depth reasonable |
+| **Provide Back Navigation** | Ensure users can always return to previous screens |
+| **Use Appropriate Methods** | Choose push, replace, or remove based on UX needs |
+
+---
+
+### Navigation Reflection
+
+#### How Navigator Manages the Screen Stack
+
+1. **Stack-Based Architecture**
+   - Navigator maintains a stack of Route objects
+   - Each route represents a screen in the app
+   - The topmost route is the currently visible screen
+
+2. **Push Operations**
+   - `pushNamed()` creates a new Route and adds it to the stack
+   - Animation transitions the new screen into view
+   - Previous screen remains in memory (for back navigation)
+
+3. **Pop Operations**
+   - `pop()` removes the topmost route from the stack
+   - Reveals the previous screen underneath
+   - Can optionally return data to the previous screen
+
+4. **Memory Management**
+   - Routes in the stack maintain their state
+   - Popped routes are disposed and garbage collected
+   - Deep stacks may impact memory usage
+
+#### Benefits of Named Routes in Scalable Applications
+
+1. **Code Organization**
+   - All routes visible in one configuration file
+   - Easy to add, modify, or remove routes
+   - Clear overview of app navigation structure
+
+2. **Maintainability**
+   - Changing a screen only requires updating the route mapping
+   - Route constants prevent string typo errors
+   - Refactoring is straightforward
+
+3. **Deep Linking Support**
+   - String-based routes map naturally to URLs
+   - Web and mobile can share route definitions
+   - Easier to implement universal links
+
+4. **Team Collaboration**
+   - Clear navigation contracts between features
+   - Different team members can work on different screens
+   - Route configuration serves as documentation
+
+#### How Navigation Improves User Experience
+
+1. **Intuitive Flow**
+   - Users expect consistent back behavior
+   - Push/pop follows mobile platform conventions
+   - Familiar navigation patterns reduce learning curve
+
+2. **Context Preservation**
+   - Stack maintains user journey context
+   - Users can backtrack through their path
+   - Form data preserved when navigating away temporarily
+
+3. **Visual Feedback**
+   - Transitions indicate navigation direction
+   - Users understand spatial relationships between screens
+   - Animations provide continuity
+
+4. **Error Recovery**
+   - Users can always go back if they make mistakes
+   - Deep linking allows direct access to specific screens
+   - Unknown route handling prevents crashes
 
 ---
 
