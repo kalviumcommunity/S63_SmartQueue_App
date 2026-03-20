@@ -10,18 +10,19 @@ This project serves as both a functional application and a learning resource for
 
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
-3. [Responsive Layout Design](#responsive-layout-design)
-4. [Multi-Screen Navigation](#multi-screen-navigation)
-5. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-6. [Widget Tree Concept](#widget-tree-concept)
-7. [Reactive UI Model](#reactive-ui-model)
-8. [Setup Steps Documentation](#setup-steps-documentation)
-9. [Setup Verification](#setup-verification)
-10. [Folder Structure Explanation](#folder-structure-explanation)
-11. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-12. [Flutter Development Tools](#flutter-development-tools)
-13. [Reflection](#reflection)
-14. [Quick Reference Commands](#quick-reference-commands)
+3. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
+4. [Responsive Layout Design](#responsive-layout-design)
+5. [Multi-Screen Navigation](#multi-screen-navigation)
+6. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+7. [Widget Tree Concept](#widget-tree-concept)
+8. [Reactive UI Model](#reactive-ui-model)
+9. [Setup Steps Documentation](#setup-steps-documentation)
+10. [Setup Verification](#setup-verification)
+11. [Folder Structure Explanation](#folder-structure-explanation)
+12. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+13. [Flutter Development Tools](#flutter-development-tools)
+14. [Reflection](#reflection)
+15. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -76,6 +77,503 @@ Understanding the Flutter project structure is fundamental for:
 6. **Onboarding**: Help new team members understand the codebase quickly
 
 A well-organized project structure is not just about aesthetics—it directly impacts development speed, code maintainability, and team productivity. Investing time in understanding and implementing proper structure pays dividends throughout the project lifecycle.
+
+---
+
+## Scrollable Views (ListView & GridView)
+
+This section demonstrates how to implement efficient scrollable user interfaces using Flutter's **ListView** and **GridView** widgets.
+
+### Overview
+
+Scrollable views are essential for displaying dynamic content that exceeds screen boundaries. Flutter provides powerful scrolling widgets that handle large datasets efficiently through virtualization.
+
+**Location**: `lib/screens/scrollable/scrollable_views_screen.dart`
+
+The SmartQueue project includes a comprehensive scrollable views demo featuring:
+- Horizontal and vertical ListView
+- GridView with fixed columns
+- CustomScrollView combining multiple scrollables
+- Builder-based construction for performance
+- Real-world order and menu examples
+
+---
+
+### ListView Widget
+
+#### What is ListView?
+
+**ListView** is a scrollable list of widgets arranged linearly (vertically or horizontally). It's the most commonly used scrolling widget in Flutter.
+
+#### ListView Construction Methods
+
+| Constructor | Use Case | Performance |
+|-------------|----------|-------------|
+| `ListView()` | Small, fixed lists | All children built immediately |
+| `ListView.builder()` | Large/dynamic lists | Only visible items built (lazy) |
+| `ListView.separated()` | Lists with separators | Lazy with custom separators |
+| `ListView.custom()` | Custom child management | Full control over child creation |
+
+#### ListView.builder (Recommended)
+
+```dart
+ListView.builder(
+  // Number of items in the list
+  itemCount: orders.length,
+  
+  // Builds each item lazily (only when visible)
+  itemBuilder: (context, index) {
+    return OrderCard(order: orders[index]);
+  },
+  
+  // Scroll direction (default: vertical)
+  scrollDirection: Axis.vertical,
+  
+  // Padding around the list
+  padding: const EdgeInsets.all(16),
+  
+  // Scroll behavior
+  physics: const BouncingScrollPhysics(),
+)
+```
+
+#### Vertical ListView Example (Orders)
+
+```dart
+ListView.builder(
+  padding: const EdgeInsets.all(16),
+  physics: const BouncingScrollPhysics(),
+  itemCount: _orders.length,
+  itemBuilder: (context, index) {
+    final order = _orders[index];
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: index < _orders.length - 1 ? 12 : 0,
+      ),
+      child: OrderCard(
+        id: order['id'],
+        items: order['items'],
+        status: order['status'],
+        customer: order['customer'],
+        total: order['total'],
+      ),
+    );
+  },
+)
+```
+
+#### Horizontal ListView Example (Featured Items)
+
+```dart
+SizedBox(
+  height: 180,  // Fixed height for horizontal list
+  child: ListView.builder(
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    physics: const BouncingScrollPhysics(),
+    itemCount: _featuredItems.length,
+    itemBuilder: (context, index) {
+      return Container(
+        width: 140,  // Fixed width for each item
+        margin: EdgeInsets.only(
+          right: index < _featuredItems.length - 1 ? 12 : 0,
+        ),
+        child: FeaturedItemCard(item: _featuredItems[index]),
+      );
+    },
+  ),
+)
+```
+
+---
+
+### GridView Widget
+
+#### What is GridView?
+
+**GridView** displays items in a 2D grid arrangement. It supports both fixed and dynamic column configurations.
+
+#### GridView Construction Methods
+
+| Constructor | Description |
+|-------------|-------------|
+| `GridView.count()` | Fixed number of columns |
+| `GridView.extent()` | Maximum item extent |
+| `GridView.builder()` | Lazy loading with delegate |
+| `GridView.custom()` | Custom grid delegates |
+
+#### GridView with Fixed Columns
+
+```dart
+GridView.builder(
+  // Grid configuration
+  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 4,        // 4 columns
+    mainAxisSpacing: 12,      // Vertical spacing
+    crossAxisSpacing: 12,     // Horizontal spacing
+    childAspectRatio: 0.85,   // Width/Height ratio
+  ),
+  
+  // Content
+  itemCount: _categories.length,
+  itemBuilder: (context, index) {
+    return CategoryCard(category: _categories[index]);
+  },
+  
+  // Padding and physics
+  padding: const EdgeInsets.all(16),
+  physics: const BouncingScrollPhysics(),
+)
+```
+
+#### Grid Delegates
+
+| Delegate | Description | When to Use |
+|----------|-------------|-------------|
+| `SliverGridDelegateWithFixedCrossAxisCount` | Fixed number of columns | Known column count |
+| `SliverGridDelegateWithMaxCrossAxisExtent` | Maximum item width | Responsive column count |
+
+```dart
+// Fixed 4 columns
+SliverGridDelegateWithFixedCrossAxisCount(
+  crossAxisCount: 4,
+  childAspectRatio: 0.85,
+)
+
+// Dynamic columns based on item width
+SliverGridDelegateWithMaxCrossAxisExtent(
+  maxCrossAxisExtent: 120,  // Max item width
+  childAspectRatio: 0.85,
+)
+```
+
+---
+
+### Combining ListView and GridView
+
+#### The Challenge
+
+Placing multiple scrollable widgets directly causes conflicts—each wants to control scrolling. Flutter solves this with **CustomScrollView** and **Slivers**.
+
+#### CustomScrollView Solution
+
+```dart
+CustomScrollView(
+  physics: const BouncingScrollPhysics(),
+  slivers: [
+    // Section Header
+    SliverToBoxAdapter(
+      child: Text('Featured Items'),
+    ),
+    
+    // Horizontal ListView (wrapped in SliverToBoxAdapter)
+    SliverToBoxAdapter(
+      child: SizedBox(
+        height: 180,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _featuredItems.length,
+          itemBuilder: (context, index) => FeaturedCard(index),
+        ),
+      ),
+    ),
+    
+    // Section Header
+    SliverToBoxAdapter(
+      child: Text('Categories'),
+    ),
+    
+    // GridView as Sliver
+    SliverGrid(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+      ),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => CategoryCard(_categories[index]),
+        childCount: _categories.length,
+      ),
+    ),
+    
+    // Section Header
+    SliverToBoxAdapter(
+      child: Text('Recent Orders'),
+    ),
+    
+    // ListView as Sliver
+    SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => OrderCard(_orders[index]),
+        childCount: _orders.length,
+      ),
+    ),
+  ],
+)
+```
+
+#### Sliver Widgets Reference
+
+| Sliver Widget | Regular Equivalent | Purpose |
+|---------------|-------------------|---------|
+| `SliverList` | `ListView` | Scrollable list in CustomScrollView |
+| `SliverGrid` | `GridView` | Scrollable grid in CustomScrollView |
+| `SliverToBoxAdapter` | Any widget | Wrap non-sliver widgets |
+| `SliverPadding` | `Padding` | Add padding to slivers |
+| `SliverAppBar` | `AppBar` | Collapsible app bar |
+
+---
+
+### SmartQueue Scrollable Demo
+
+The demo screen includes two tabs showcasing different scrollable patterns:
+
+#### Tab 1: Combined View
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    COMBINED SCROLLVIEW                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ Featured Items (Horizontal ListView)                     │  │
+│   │ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ →               │  │
+│   │ │ 🍔  │ │ 🍕  │ │ 🌮  │ │ 🥗  │ │ 🥤  │                  │  │
+│   │ │$12  │ │$18  │ │$9   │ │$8   │ │$5   │                  │  │
+│   │ └─────┘ └─────┘ └─────┘ └─────┘ └─────┘                  │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   Menu Categories (GridView - 4 columns)                        │
+│   ┌────────┬────────┬────────┬────────┐                        │
+│   │Burgers │ Pizza  │ Tacos  │ Drinks │                        │
+│   ├────────┼────────┼────────┼────────┤                        │
+│   │Desserts│ Salads │ Sides  │ Combos │                        │
+│   └────────┴────────┴────────┴────────┘                        │
+│                                                                 │
+│   Recent Orders (Vertical ListView)                             │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ ORD-001 │ 2x Burger, 1x Fries    │ Preparing │ $24.99   │  │
+│   ├─────────────────────────────────────────────────────────┤  │
+│   │ ORD-002 │ 1x Pizza, 2x Garlic    │ Queued    │ $32.50   │  │
+│   ├─────────────────────────────────────────────────────────┤  │
+│   │ ORD-003 │ 3x Tacos, 1x Nachos    │ Ready     │ $28.75   │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                              ↓ Scroll for more                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Tab 2: ListView Only
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    LISTVIEW DEMO                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Filter Chips (Horizontal ListView)                            │
+│   ┌─────┐ ┌───────┐ ┌──────────┐ ┌───────┐ ┌───────────┐       │
+│   │ All │ │Queued │ │Preparing │ │ Ready │ │ Completed │ →     │
+│   └─────┘ └───────┘ └──────────┘ └───────┘ └───────────┘       │
+│   ─────────────────────────────────────────────────────────    │
+│                                                                 │
+│   Orders List (Vertical ListView.builder)                       │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ 📋 ORD-001                        [Preparing]           │  │
+│   │    👤 John Doe    ⏰ 2 min ago              $24.99      │  │
+│   │    ─────────────────────────────────────────────        │  │
+│   │    🛍️ 2x Burger, 1x Fries, 1x Coke                      │  │
+│   ├─────────────────────────────────────────────────────────┤  │
+│   │ 📋 ORD-002                        [Queued]              │  │
+│   │    👤 Jane Smith  ⏰ 5 min ago              $32.50      │  │
+│   │    ─────────────────────────────────────────────        │  │
+│   │    🛍️ 1x Pizza Margherita, 2x Garlic Bread              │  │
+│   ├─────────────────────────────────────────────────────────┤  │
+│   │                    ... more items ...                    │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Performance Optimization
+
+#### Why Builder Patterns Matter
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│               BUILDER vs DIRECT CONSTRUCTION                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ListView (Direct):                                            │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ Item 1  │ Item 2  │ Item 3  │ Item 4  │ ... │ Item 100 │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│   ALL 100 items built immediately → High memory usage           │
+│                                                                 │
+│   ListView.builder (Lazy):                                      │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ Item 1  │ Item 2  │ Item 3  │ Item 4  │ [not built yet] │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│   Only VISIBLE items built → Low memory usage                   │
+│   Items created on-demand as user scrolls                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Performance Best Practices
+
+| Practice | Description |
+|----------|-------------|
+| **Use .builder()** | Always use builder constructors for lists > 20 items |
+| **Const constructors** | Use `const` for static child widgets |
+| **Avoid heavy builds** | Keep itemBuilder logic lightweight |
+| **Cache data** | Don't fetch/compute in itemBuilder |
+| **Fixed extents** | Use `itemExtent` when items have same height |
+| **Proper keys** | Use keys for items that may reorder |
+
+#### Example: Optimized ListView
+
+```dart
+ListView.builder(
+  // Fixed item height improves scroll performance
+  itemExtent: 80,
+  
+  // Estimated extent for variable heights
+  // prototypeItem: OrderCard(order: sampleOrder),
+  
+  // Cache extent for smoother scrolling
+  cacheExtent: 200,
+  
+  itemCount: orders.length,
+  itemBuilder: (context, index) {
+    // Keep builder logic simple
+    return OrderCard(
+      key: ValueKey(orders[index].id),
+      order: orders[index],
+    );
+  },
+)
+```
+
+---
+
+### Scroll Physics
+
+| Physics | Behavior | Platform |
+|---------|----------|----------|
+| `BouncingScrollPhysics` | Bounces at edges | iOS default |
+| `ClampingScrollPhysics` | Stops at edges | Android default |
+| `NeverScrollableScrollPhysics` | Disables scrolling | Nested scrollables |
+| `AlwaysScrollableScrollPhysics` | Always scrollable | Pull-to-refresh |
+
+```dart
+ListView.builder(
+  // iOS-style bounce
+  physics: const BouncingScrollPhysics(),
+  
+  // Or Android-style clamp
+  physics: const ClampingScrollPhysics(),
+  
+  // Or always allow scrolling (for refresh)
+  physics: const AlwaysScrollableScrollPhysics(),
+  
+  itemCount: items.length,
+  itemBuilder: (context, index) => ItemCard(items[index]),
+)
+```
+
+---
+
+### Visual Evidence
+
+> **Screenshot Placeholder**: [Insert Screenshot - Horizontal ListView]
+> 
+> *Shows the Featured Items section with horizontal scrolling cards displaying food items with images, names, prices, and ratings*
+
+> **Screenshot Placeholder**: [Insert Screenshot - GridView Categories]
+> 
+> *Shows the Menu Categories grid with 4 columns displaying category icons, names, and item counts*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Vertical ListView]
+> 
+> *Shows the Recent Orders list with order cards displaying order ID, items, status badge, customer, and total*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Combined Scroll]
+> 
+> *Shows the full combined view demonstrating smooth scrolling through horizontal list, grid, and vertical list sections*
+
+> **Screenshot Placeholder**: [Insert Screenshot - ListView Tab]
+> 
+> *Shows the ListView-only tab with filter chips and detailed order cards*
+
+---
+
+### Scrollable Views Reflection
+
+#### How ListView and GridView Improve UI Efficiency
+
+1. **Virtualization**
+   - Only visible items are rendered in memory
+   - Off-screen items are recycled and reused
+   - Supports thousands of items without performance issues
+
+2. **Lazy Loading**
+   - Items created on-demand during scroll
+   - Initial load time is minimal regardless of list size
+   - Memory usage stays constant
+
+3. **Smooth Scrolling**
+   - 60fps scrolling with proper implementation
+   - Native platform scrolling physics
+   - Hardware-accelerated rendering
+
+4. **Accessibility**
+   - Automatic semantic labels for screen readers
+   - Keyboard navigation support
+   - Focus management handled by framework
+
+#### Why Builder Patterns are Important
+
+1. **Memory Efficiency**
+   - Direct construction: O(n) memory for n items
+   - Builder pattern: O(k) memory for k visible items
+   - Critical for mobile devices with limited RAM
+
+2. **Startup Performance**
+   - Direct: All items built before first frame
+   - Builder: Only initial visible items built
+   - Faster time-to-interactive
+
+3. **Scalability**
+   - 10 items or 10,000 items - same performance
+   - Infinite scrolling becomes trivial
+   - Pagination integrates naturally
+
+4. **Battery Life**
+   - Less computation = lower CPU usage
+   - Fewer objects = less garbage collection
+   - Important for mobile apps
+
+#### Common Performance Pitfalls
+
+| Pitfall | Problem | Solution |
+|---------|---------|----------|
+| **Heavy itemBuilder** | Slow scroll | Move computation outside builder |
+| **No keys** | Wrong item rebuilds | Use `ValueKey` for unique items |
+| **Nested scrollables** | Scroll conflicts | Use `NeverScrollableScrollPhysics` or Slivers |
+| **Large images** | Memory spikes | Use cached/resized images |
+| **setState in builder** | Infinite rebuilds | Manage state outside list |
+| **Direct construction** | Memory overflow | Use `.builder()` constructor |
+
+#### SmartQueue Implementation Notes
+
+The scrollable views demo uses these patterns effectively:
+- `ListView.builder` for orders (potentially hundreds of items)
+- `SliverGrid` for categories (small fixed set, but sliver-compatible)
+- `CustomScrollView` to combine multiple scrollable sections
+- `BouncingScrollPhysics` for iOS-style user experience
+- Fixed heights where possible for optimal performance
 
 ---
 
