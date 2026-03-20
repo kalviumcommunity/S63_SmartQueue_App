@@ -10,23 +10,24 @@ This project serves as both a functional application and a learning resource for
 
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
-3. [Responsive Design with MediaQuery & LayoutBuilder](#responsive-design-with-mediaquery--layoutbuilder)
-4. [Reusable Custom Widgets](#reusable-custom-widgets)
-5. [State Management with setState](#state-management-with-setstate)
-6. [User Input Forms](#user-input-forms)
-7. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
-8. [Responsive Layout Design](#responsive-layout-design)
-9. [Multi-Screen Navigation](#multi-screen-navigation)
-10. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-11. [Widget Tree Concept](#widget-tree-concept)
-12. [Reactive UI Model](#reactive-ui-model)
-13. [Setup Steps Documentation](#setup-steps-documentation)
-14. [Setup Verification](#setup-verification)
-15. [Folder Structure Explanation](#folder-structure-explanation)
-16. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-17. [Flutter Development Tools](#flutter-development-tools)
-18. [Reflection](#reflection)
-19. [Quick Reference Commands](#quick-reference-commands)
+3. [Asset Management (Images & Icons)](#asset-management-images--icons)
+4. [Responsive Design with MediaQuery & LayoutBuilder](#responsive-design-with-mediaquery--layoutbuilder)
+5. [Reusable Custom Widgets](#reusable-custom-widgets)
+6. [State Management with setState](#state-management-with-setstate)
+7. [User Input Forms](#user-input-forms)
+8. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
+9. [Responsive Layout Design](#responsive-layout-design)
+10. [Multi-Screen Navigation](#multi-screen-navigation)
+11. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+12. [Widget Tree Concept](#widget-tree-concept)
+13. [Reactive UI Model](#reactive-ui-model)
+14. [Setup Steps Documentation](#setup-steps-documentation)
+15. [Setup Verification](#setup-verification)
+16. [Folder Structure Explanation](#folder-structure-explanation)
+17. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+18. [Flutter Development Tools](#flutter-development-tools)
+19. [Reflection](#reflection)
+20. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -81,6 +82,376 @@ Understanding the Flutter project structure is fundamental for:
 6. **Onboarding**: Help new team members understand the codebase quickly
 
 A well-organized project structure is not just about aesthetics—it directly impacts development speed, code maintainability, and team productivity. Investing time in understanding and implementing proper structure pays dividends throughout the project lifecycle.
+
+---
+
+## Asset Management (Images & Icons)
+
+This section demonstrates how to manage and display local assets such as images and icons in Flutter applications.
+
+### Overview
+
+Assets are static files bundled with your app, such as images, icons, fonts, and data files. Proper asset management is crucial for:
+- Professional UI appearance
+- App performance optimization
+- Maintainable codebase
+
+**Location**: `lib/screens/assets/asset_demo_screen.dart` and `lib/constants/asset_paths.dart`
+
+---
+
+### Asset Folder Structure
+
+```
+smartqueue_app/
+├── assets/
+│   ├── images/
+│   │   ├── smartqueue_logo.svg      # App logo
+│   │   ├── banner_placeholder.svg   # Banner image
+│   │   └── empty_state.svg          # Empty state illustration
+│   └── icons/
+│       ├── order_icon.svg           # Custom order icon
+│       └── queue_icon.svg           # Custom queue icon
+├── lib/
+│   └── constants/
+│       └── asset_paths.dart         # Centralized path management
+└── pubspec.yaml                     # Asset registration
+```
+
+---
+
+### Step 1: Create Asset Folders
+
+Create the folder structure in your project root:
+
+```bash
+mkdir -p assets/images assets/icons
+```
+
+---
+
+### Step 2: Register Assets in pubspec.yaml
+
+```yaml
+flutter:
+  uses-material-design: true  # Enables Material Icons
+  
+  # Asset registration
+  assets:
+    - assets/images/
+    - assets/icons/
+```
+
+**Important Notes**:
+- Trailing slash `/` includes all files in directory
+- Each subdirectory needs separate entry (or use folder pattern)
+- Run `flutter pub get` after modifying pubspec.yaml
+
+---
+
+### Step 3: Create Asset Path Constants
+
+```dart
+// lib/constants/asset_paths.dart
+class AssetPaths {
+  AssetPaths._();  // Prevent instantiation
+  
+  // Images
+  static const String logo = 'assets/images/smartqueue_logo.svg';
+  static const String banner = 'assets/images/banner_placeholder.svg';
+  static const String emptyState = 'assets/images/empty_state.svg';
+  
+  // Icons
+  static const String orderIcon = 'assets/icons/order_icon.svg';
+  static const String queueIcon = 'assets/icons/queue_icon.svg';
+  
+  // Helper methods
+  static String image(String filename) => 'assets/images/$filename';
+  static String icon(String filename) => 'assets/icons/$filename';
+}
+```
+
+**Benefits**:
+- Single source of truth
+- Compile-time error checking
+- IDE autocomplete support
+- Easy refactoring
+
+---
+
+### Displaying Images
+
+#### PNG/JPG Images
+
+```dart
+// Basic image
+Image.asset('assets/images/photo.png')
+
+// With sizing and fit
+Image.asset(
+  'assets/images/photo.png',
+  width: 200,
+  height: 150,
+  fit: BoxFit.cover,
+)
+
+// With placeholder and error handling
+Image.asset(
+  AssetPaths.banner,
+  errorBuilder: (context, error, stackTrace) {
+    return Icon(Icons.error);
+  },
+)
+```
+
+#### SVG Images (Requires flutter_svg)
+
+```yaml
+# pubspec.yaml
+dependencies:
+  flutter_svg: ^2.0.17
+```
+
+```dart
+import 'package:flutter_svg/flutter_svg.dart';
+
+// Basic SVG
+SvgPicture.asset(AssetPaths.logo)
+
+// With sizing
+SvgPicture.asset(
+  AssetPaths.logo,
+  width: 100,
+  height: 100,
+  fit: BoxFit.contain,
+)
+
+// With color filter (tinting)
+SvgPicture.asset(
+  AssetPaths.orderIcon,
+  colorFilter: ColorFilter.mode(
+    Colors.blue,
+    BlendMode.srcIn,
+  ),
+)
+```
+
+---
+
+### Using Flutter Icons
+
+#### Material Icons
+
+```dart
+// Basic icon
+Icon(Icons.home)
+
+// With customization
+Icon(
+  Icons.home_rounded,
+  size: 28,
+  color: Color(0xFF6366F1),
+)
+
+// In a container
+Container(
+  padding: EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    color: Colors.blue.withOpacity(0.1),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Icon(Icons.shopping_cart, color: Colors.blue),
+)
+```
+
+#### Common Material Icon Categories
+
+| Category | Examples |
+|----------|----------|
+| **Navigation** | `home`, `menu`, `arrow_back`, `close` |
+| **Actions** | `add`, `edit`, `delete`, `search`, `settings` |
+| **Content** | `receipt`, `list`, `grid_view`, `inbox` |
+| **Communication** | `email`, `phone`, `chat`, `notifications` |
+| **Status** | `check_circle`, `error`, `warning`, `info` |
+
+#### Cupertino Icons (iOS-style)
+
+```yaml
+# Already included via cupertino_icons package
+dependencies:
+  cupertino_icons: ^1.0.8
+```
+
+```dart
+import 'package:flutter/cupertino.dart';
+
+Icon(CupertinoIcons.heart_fill)
+Icon(CupertinoIcons.settings)
+```
+
+---
+
+### Combining Images and Icons
+
+```dart
+// Header with logo and icons
+Row(
+  children: [
+    // Logo from assets
+    SvgPicture.asset(
+      AssetPaths.logo,
+      width: 48,
+      height: 48,
+    ),
+    SizedBox(width: 16),
+    // Text
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('SmartQueue', style: TextStyle(fontWeight: FontWeight.bold)),
+        Text('Queue Management'),
+      ],
+    ),
+    Spacer(),
+    // Material icons
+    IconButton(
+      icon: Icon(Icons.notifications_outlined),
+      onPressed: () {},
+    ),
+    IconButton(
+      icon: Icon(Icons.settings_outlined),
+      onPressed: () {},
+    ),
+  ],
+)
+```
+
+---
+
+### Image Scaling and Fit Options
+
+```dart
+Image.asset(
+  'assets/images/photo.png',
+  fit: BoxFit.contain,  // Fits inside bounds, may leave empty space
+  // fit: BoxFit.cover,   // Covers entire bounds, may crop
+  // fit: BoxFit.fill,    // Stretches to fill (may distort)
+  // fit: BoxFit.fitWidth,  // Fits width, scales height
+  // fit: BoxFit.fitHeight, // Fits height, scales width
+  // fit: BoxFit.none,    // Original size, may overflow
+  // fit: BoxFit.scaleDown, // Like contain, but never scales up
+)
+```
+
+---
+
+### Visual Evidence
+
+> **Screenshot Placeholder**: [Insert Screenshot - Asset Demo Screen Header]
+> 
+> *Shows the header with SVG logo, title, and Material Icons in a gradient banner*
+
+> **Screenshot Placeholder**: [Insert Screenshot - SVG Images Section]
+> 
+> *Shows multiple SVG images (logo, order icon, queue icon) in a grid layout*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Material Icons Grid]
+> 
+> *Shows a grid of Material Icons with different colors and labels*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Asset Folder Structure]
+> 
+> *Shows the assets folder structure in VS Code/IDE file explorer*
+
+---
+
+### Common Asset Issues and Solutions
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| **Image not found** | Path typo or missing registration | Check path, run `flutter pub get` |
+| **Asset not loading** | Not registered in pubspec.yaml | Add to assets list |
+| **SVG not rendering** | Missing flutter_svg package | Add dependency |
+| **Image overflow** | No size constraints | Add width/height or use fit |
+| **Wrong path format** | Using backslashes on Windows | Always use forward slashes |
+| **Hot reload not working** | New asset added | Full restart (`flutter run`) |
+
+---
+
+### Best Practices
+
+#### 1. Use Constants for Paths
+
+```dart
+// ❌ Bad: Hardcoded strings
+Image.asset('assets/images/logo.png')
+
+// ✅ Good: Using constants
+Image.asset(AssetPaths.logo)
+```
+
+#### 2. Organize by Type
+
+```
+assets/
+├── images/     # Photos, illustrations, backgrounds
+├── icons/      # Custom icons
+├── fonts/      # Custom fonts
+└── data/       # JSON, CSV files
+```
+
+#### 3. Use Appropriate Formats
+
+| Format | Use Case | Advantages |
+|--------|----------|------------|
+| **SVG** | Icons, logos, illustrations | Scalable, small size |
+| **PNG** | Photos with transparency | Lossless, alpha channel |
+| **JPG** | Photos without transparency | Small file size |
+| **WebP** | Modern alternative | Best compression |
+
+#### 4. Provide Multiple Resolutions
+
+```
+assets/images/
+├── logo.png        # 1x (baseline)
+├── 2.0x/
+│   └── logo.png    # 2x (high DPI)
+└── 3.0x/
+    └── logo.png    # 3x (very high DPI)
+```
+
+Flutter automatically selects the appropriate resolution.
+
+---
+
+### Asset Management Reflection
+
+#### Steps to Load Assets Correctly
+
+1. **Create folder structure** in project root
+2. **Add assets** (images, icons) to folders
+3. **Register in pubspec.yaml** under flutter section
+4. **Run `flutter pub get`** to update
+5. **Create constants file** for paths
+6. **Use Image.asset() or SvgPicture.asset()** to display
+
+#### Common Configuration Mistakes
+
+1. **Forgetting trailing slash** in directory paths
+2. **Wrong indentation** in pubspec.yaml (YAML is sensitive)
+3. **Not running pub get** after changes
+4. **Using backslashes** instead of forward slashes
+5. **Case sensitivity** issues on some platforms
+
+#### Importance in Scalable Apps
+
+| Aspect | Impact |
+|--------|--------|
+| **Performance** | Optimized assets = faster load times |
+| **Maintenance** | Centralized paths = easy updates |
+| **Consistency** | Shared icons/images = unified design |
+| **Team Collaboration** | Clear structure = fewer conflicts |
+| **App Size** | Proper formats = smaller APK/IPA |
 
 ---
 
