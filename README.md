@@ -577,6 +577,147 @@ The scrollable views demo uses these patterns effectively:
 
 ---
 
+### ListView vs GridView Comparison
+
+Understanding when to use ListView versus GridView is crucial for building effective user interfaces.
+
+#### Feature Comparison
+
+| Feature | ListView | GridView |
+|---------|----------|----------|
+| **Layout** | Linear (1D) | Grid (2D) |
+| **Direction** | Vertical or Horizontal | Primarily Vertical |
+| **Columns** | Single column/row | Multiple columns |
+| **Item Size** | Variable height/width | Uniform aspect ratio |
+| **Best For** | Sequential content | Gallery/category displays |
+| **Scroll Axis** | One axis at a time | Vertical with horizontal wrap |
+
+#### When to Use ListView
+
+| Scenario | Example | Why ListView |
+|----------|---------|--------------|
+| **Sequential Data** | Chat messages, timeline | Natural reading order |
+| **Variable Heights** | News articles, comments | Each item can differ |
+| **Horizontal Scroll** | Featured items carousel | Single row scrolling |
+| **Detailed Items** | Order cards with info | Need full width for details |
+| **Infinite Scroll** | Social media feed | Easy pagination |
+
+#### When to Use GridView
+
+| Scenario | Example | Why GridView |
+|----------|---------|--------------|
+| **Gallery Display** | Photo gallery, products | Visual comparison |
+| **Categories** | Menu categories, icons | Compact overview |
+| **Uniform Items** | App icons, thumbnails | Consistent layout |
+| **Dashboard Tiles** | Stats cards, actions | Space efficiency |
+| **Selection Grid** | Color picker, sizes | Easy selection |
+
+#### Visual Comparison
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                  LISTVIEW vs GRIDVIEW                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ListView (Vertical)          GridView (2D Grid)               │
+│   ┌────────────────────┐       ┌──────┬──────┬──────┬──────┐   │
+│   │ Item 1             │       │ A    │ B    │ C    │ D    │   │
+│   ├────────────────────┤       ├──────┼──────┼──────┼──────┤   │
+│   │ Item 2             │       │ E    │ F    │ G    │ H    │   │
+│   ├────────────────────┤       ├──────┼──────┼──────┼──────┤   │
+│   │ Item 3             │       │ I    │ J    │ K    │ L    │   │
+│   ├────────────────────┤       └──────┴──────┴──────┴──────┘   │
+│   │ Item 4             │                                        │
+│   └────────────────────┘       • Multiple items per row         │
+│                                • Fixed aspect ratios            │
+│   • One item per row           • Space efficient                │
+│   • Variable heights           • Visual overview                │
+│   • Full width details                                          │
+│                                                                 │
+│   ListView (Horizontal)                                         │
+│   ┌──────┬──────┬──────┬──────┬──────┐                         │
+│   │  A   │  B   │  C   │  D   │  E   │ →                       │
+│   └──────┴──────┴──────┴──────┴──────┘                         │
+│                                                                 │
+│   • Single row, horizontal scroll                               │
+│   • Great for featured/carousel content                         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Real-World Use Cases in SmartQueue
+
+| Component | Widget Used | Reason |
+|-----------|-------------|--------|
+| **Featured Items** | Horizontal ListView | Carousel showcase, single row |
+| **Menu Categories** | GridView (4 columns) | Visual overview, compact selection |
+| **Order Queue** | Vertical ListView | Detailed info, variable content |
+| **Filter Chips** | Horizontal ListView | Single row, scrollable options |
+| **Quick Actions** | Row (not scrollable) | Fixed small set |
+
+#### Code Pattern Comparison
+
+**ListView Pattern:**
+```dart
+ListView.builder(
+  itemCount: orders.length,
+  itemBuilder: (context, index) {
+    return OrderCard(
+      // Full width card with details
+      order: orders[index],
+    );
+  },
+)
+```
+
+**GridView Pattern:**
+```dart
+GridView.builder(
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 4,        // 4 items per row
+    childAspectRatio: 0.85,   // Uniform sizing
+  ),
+  itemCount: categories.length,
+  itemBuilder: (context, index) {
+    return CategoryTile(
+      // Compact square tile
+      category: categories[index],
+    );
+  },
+)
+```
+
+#### Decision Flowchart
+
+```
+┌─────────────────────────────────────────┐
+│    What type of content?                │
+└───────────────┬─────────────────────────┘
+                │
+        ┌───────┴───────┐
+        ▼               ▼
+   Sequential?     Visual Gallery?
+        │               │
+        ▼               ▼
+   ┌─────────┐    ┌───────────┐
+   │ListView │    │ GridView  │
+   └─────────┘    └───────────┘
+        │               │
+        ▼               ▼
+   Variable      Uniform items?
+   heights?           │
+        │         ┌───┴───┐
+    ┌───┴───┐     ▼       ▼
+    ▼       ▼   Fixed   Dynamic
+  Yes      No  Columns  Columns
+    │       │     │        │
+    ▼       ▼     ▼        ▼
+ListView  Can use  count()  extent()
+.builder  either  delegate delegate
+```
+
+---
+
 ## Responsive Layout Design
 
 This section demonstrates how to create responsive, adaptive user interfaces using Flutter's core layout widgets: **Container**, **Row**, and **Column**.
