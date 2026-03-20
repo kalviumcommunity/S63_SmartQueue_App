@@ -10,22 +10,23 @@ This project serves as both a functional application and a learning resource for
 
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
-3. [Reusable Custom Widgets](#reusable-custom-widgets)
-4. [State Management with setState](#state-management-with-setstate)
-5. [User Input Forms](#user-input-forms)
-6. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
-7. [Responsive Layout Design](#responsive-layout-design)
-8. [Multi-Screen Navigation](#multi-screen-navigation)
-9. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-10. [Widget Tree Concept](#widget-tree-concept)
-11. [Reactive UI Model](#reactive-ui-model)
-12. [Setup Steps Documentation](#setup-steps-documentation)
-13. [Setup Verification](#setup-verification)
-14. [Folder Structure Explanation](#folder-structure-explanation)
-15. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-16. [Flutter Development Tools](#flutter-development-tools)
-17. [Reflection](#reflection)
-18. [Quick Reference Commands](#quick-reference-commands)
+3. [Responsive Design with MediaQuery & LayoutBuilder](#responsive-design-with-mediaquery--layoutbuilder)
+4. [Reusable Custom Widgets](#reusable-custom-widgets)
+5. [State Management with setState](#state-management-with-setstate)
+6. [User Input Forms](#user-input-forms)
+7. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
+8. [Responsive Layout Design](#responsive-layout-design)
+9. [Multi-Screen Navigation](#multi-screen-navigation)
+10. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+11. [Widget Tree Concept](#widget-tree-concept)
+12. [Reactive UI Model](#reactive-ui-model)
+13. [Setup Steps Documentation](#setup-steps-documentation)
+14. [Setup Verification](#setup-verification)
+15. [Folder Structure Explanation](#folder-structure-explanation)
+16. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+17. [Flutter Development Tools](#flutter-development-tools)
+18. [Reflection](#reflection)
+19. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -80,6 +81,420 @@ Understanding the Flutter project structure is fundamental for:
 6. **Onboarding**: Help new team members understand the codebase quickly
 
 A well-organized project structure is not just about aesthetics—it directly impacts development speed, code maintainability, and team productivity. Investing time in understanding and implementing proper structure pays dividends throughout the project lifecycle.
+
+---
+
+## Responsive Design with MediaQuery & LayoutBuilder
+
+This section demonstrates how to create fully responsive Flutter applications that adapt dynamically to different screen sizes and orientations using **MediaQuery** and **LayoutBuilder**.
+
+### Overview
+
+Responsive design ensures your app looks great on all devices - from small phones to large tablets. Flutter provides two primary tools for building responsive UIs:
+
+1. **MediaQuery** - Access device properties (size, orientation, pixel ratio)
+2. **LayoutBuilder** - Build UI based on available parent constraints
+
+**Location**: `lib/screens/responsive/responsive_design_demo.dart`
+
+---
+
+### MediaQuery - Device Information
+
+MediaQuery provides information about the device and user preferences.
+
+#### Accessing MediaQuery
+
+```dart
+@override
+Widget build(BuildContext context) {
+  // Get MediaQuery data
+  final mediaQuery = MediaQuery.of(context);
+  
+  // Screen dimensions
+  final screenWidth = mediaQuery.size.width;
+  final screenHeight = mediaQuery.size.height;
+  
+  // Orientation
+  final orientation = mediaQuery.orientation;
+  
+  // Safe areas (notch, status bar, navigation bar)
+  final padding = mediaQuery.padding;
+  final topPadding = padding.top;
+  final bottomPadding = padding.bottom;
+  
+  // Pixel density
+  final devicePixelRatio = mediaQuery.devicePixelRatio;
+  
+  // Text scale factor (accessibility)
+  final textScaleFactor = mediaQuery.textScaleFactor;
+  
+  return Container();
+}
+```
+
+#### Common MediaQuery Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `size` | `Size` | Screen width and height |
+| `orientation` | `Orientation` | Portrait or Landscape |
+| `padding` | `EdgeInsets` | Safe area insets |
+| `viewInsets` | `EdgeInsets` | Keyboard height when visible |
+| `devicePixelRatio` | `double` | Pixel density |
+| `textScaleFactor` | `double` | User's text size preference |
+| `platformBrightness` | `Brightness` | System theme (light/dark) |
+
+#### Proportional Sizing with MediaQuery
+
+```dart
+// Avoid fixed sizes
+Container(width: 300)  // ❌ Doesn't adapt
+
+// Use proportional sizing
+Container(width: screenWidth * 0.8)  // ✅ 80% of screen width
+
+// Padding that scales
+EdgeInsets.symmetric(
+  horizontal: screenWidth * 0.05,  // 5% of width
+  vertical: screenHeight * 0.02,   // 2% of height
+)
+
+// Font sizes that adapt
+TextStyle(fontSize: screenWidth * 0.04)  // ~4% of width
+```
+
+#### Device Type Detection
+
+```dart
+// Common breakpoints
+final isMobile = screenWidth < 600;
+final isTablet = screenWidth >= 600 && screenWidth < 1024;
+final isDesktop = screenWidth >= 1024;
+
+// Use in conditionals
+return Container(
+  padding: EdgeInsets.all(isMobile ? 16 : 24),
+  child: Text(
+    'Responsive Text',
+    style: TextStyle(
+      fontSize: isMobile ? 14 : isTablet ? 16 : 18,
+    ),
+  ),
+);
+```
+
+---
+
+### LayoutBuilder - Constraint-Based Layout
+
+LayoutBuilder builds UI based on the parent's constraints, not the screen size.
+
+#### Basic Usage
+
+```dart
+LayoutBuilder(
+  builder: (context, constraints) {
+    // constraints.maxWidth - Maximum available width
+    // constraints.maxHeight - Maximum available height
+    // constraints.minWidth - Minimum width (usually 0)
+    // constraints.minHeight - Minimum height (usually 0)
+    
+    final availableWidth = constraints.maxWidth;
+    
+    if (availableWidth >= 900) {
+      return _buildWideLayout();
+    } else if (availableWidth >= 600) {
+      return _buildMediumLayout();
+    } else {
+      return _buildNarrowLayout();
+    }
+  },
+)
+```
+
+#### LayoutBuilder vs MediaQuery
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 MEDIAQUERY vs LAYOUTBUILDER                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   MediaQuery                    LayoutBuilder                   │
+│   ┌─────────────────────┐      ┌─────────────────────┐         │
+│   │ Knows: Screen size  │      │ Knows: Parent size  │         │
+│   │ - Device dimensions │      │ - Available space   │         │
+│   │ - Orientation       │      │ - Within container  │         │
+│   │ - Platform info     │      │ - After padding     │         │
+│   └─────────────────────┘      └─────────────────────┘         │
+│                                                                 │
+│   Screen: 800px                 Parent: 400px                   │
+│   ┌──────────────────────────────────────────────────┐         │
+│   │ ┌────────────────────────┐ ┌──────────────────┐ │         │
+│   │ │     Side Panel         │ │    Content       │ │         │
+│   │ │                        │ │                  │ │         │
+│   │ │ MediaQuery: 800px      │ │ LayoutBuilder:   │ │         │
+│   │ │ LayoutBuilder: 400px   │ │ 400px            │ │         │
+│   │ │                        │ │                  │ │         │
+│   │ └────────────────────────┘ └──────────────────┘ │         │
+│   └──────────────────────────────────────────────────┘         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Combining MediaQuery and LayoutBuilder
+
+Use both techniques together for maximum flexibility.
+
+```dart
+@override
+Widget build(BuildContext context) {
+  // MediaQuery for device-level information
+  final mediaQuery = MediaQuery.of(context);
+  final screenWidth = mediaQuery.size.width;
+  final isLandscape = mediaQuery.orientation == Orientation.landscape;
+  
+  return Scaffold(
+    body: Column(
+      children: [
+        // Header sized proportionally to screen
+        Container(
+          height: screenWidth * 0.15,
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+          child: _buildHeader(),
+        ),
+        
+        // Content uses LayoutBuilder for available space
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final availableWidth = constraints.maxWidth;
+              
+              if (availableWidth >= 600) {
+                return Row(
+                  children: [
+                    Expanded(flex: 2, child: _buildMainPanel()),
+                    Expanded(flex: 1, child: _buildSidePanel()),
+                  ],
+                );
+              }
+              
+              return _buildMobileLayout();
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+### Responsive Breakpoints
+
+#### Standard Breakpoints
+
+| Device Type | Width Range | Typical Layout |
+|-------------|-------------|----------------|
+| **Mobile** | < 600px | Single column |
+| **Tablet** | 600px - 899px | Two columns |
+| **Desktop** | 900px+ | Three columns |
+
+#### SmartQueue Implementation
+
+```dart
+LayoutBuilder(
+  builder: (context, constraints) {
+    final width = constraints.maxWidth;
+    
+    if (width >= 900) {
+      // Desktop: Three-column dashboard
+      return Row(
+        children: [
+          Expanded(flex: 2, child: OrdersPanel()),
+          Expanded(flex: 1, child: QueuePanel()),
+          Expanded(flex: 1, child: ActionsPanel()),
+        ],
+      );
+    } else if (width >= 600) {
+      // Tablet: Two-column layout
+      return Row(
+        children: [
+          Expanded(child: OrdersPanel()),
+          Expanded(child: QueueAndActions()),
+        ],
+      );
+    } else {
+      // Mobile: Stacked layout
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            StatsGrid(),
+            OrdersList(),
+            QuickActions(),
+          ],
+        ),
+      );
+    }
+  },
+)
+```
+
+---
+
+### Orientation Handling
+
+```dart
+@override
+Widget build(BuildContext context) {
+  final orientation = MediaQuery.of(context).orientation;
+  
+  return orientation == Orientation.portrait
+      ? _buildPortraitLayout()
+      : _buildLandscapeLayout();
+}
+
+Widget _buildPortraitLayout() {
+  return Column(
+    children: [
+      Header(),
+      Expanded(child: Content()),
+      BottomNav(),
+    ],
+  );
+}
+
+Widget _buildLandscapeLayout() {
+  return Row(
+    children: [
+      SideNav(),
+      Expanded(
+        child: Column(
+          children: [
+            Header(),
+            Expanded(child: Content()),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+```
+
+---
+
+### Visual Evidence
+
+> **Screenshot Placeholder**: [Insert Screenshot - Mobile Layout]
+> 
+> *Shows single-column vertical layout with stacked stats, orders list, and quick actions on a phone screen*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Tablet Layout]
+> 
+> *Shows two-column layout with orders on the left and actions/info on the right*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Desktop Layout]
+> 
+> *Shows three-column layout with orders, queue status, and actions panels*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Landscape Mode]
+> 
+> *Shows how the layout reorganizes in landscape orientation*
+
+---
+
+### MediaQuery vs LayoutBuilder Comparison
+
+| Aspect | MediaQuery | LayoutBuilder |
+|--------|------------|---------------|
+| **Source** | Device screen | Parent widget |
+| **Scope** | Global (entire screen) | Local (available space) |
+| **Updates** | On screen change | On parent resize |
+| **Use Case** | Device-level decisions | Layout-level decisions |
+| **Access** | `MediaQuery.of(context)` | Builder callback |
+| **Safe Areas** | Yes (padding property) | No |
+| **Orientation** | Yes | No (infer from constraints) |
+
+#### When to Use Each
+
+```dart
+// MediaQuery: Device-level decisions
+// - Determining if device is phone/tablet
+// - Setting proportional padding/margins
+// - Accessing safe area insets
+// - Checking orientation globally
+// - Respecting text scale factor
+
+// LayoutBuilder: Component-level decisions  
+// - Building widgets based on available space
+// - Responsive components in any container
+// - Widgets that can be used in different contexts
+// - Self-contained responsive behavior
+```
+
+---
+
+### Responsive Design Reflection
+
+#### Why Responsiveness is Important
+
+1. **Device Diversity**
+   - Users access apps on phones, tablets, and desktops
+   - Screen sizes range from 4" to 13"+ 
+   - Orientation can change at any time
+
+2. **User Experience**
+   - Content should be readable without zooming
+   - Touch targets must be appropriately sized
+   - No horizontal scrolling on main content
+
+3. **Accessibility**
+   - Respecting text scale preferences
+   - Proper spacing for motor accessibility
+   - Content flow that makes sense
+
+4. **Business Value**
+   - Single codebase for all devices
+   - Consistent brand experience
+   - Better app store ratings
+
+#### Key Differences Summary
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    KEY TAKEAWAYS                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  MediaQuery                                                     │
+│  ✓ Use for device-level decisions                              │
+│  ✓ Access safe areas, orientation, text scale                  │
+│  ✓ Great for proportional sizing based on screen               │
+│                                                                 │
+│  LayoutBuilder                                                  │
+│  ✓ Use for layout-level decisions                              │
+│  ✓ Responds to actual available space                          │
+│  ✓ Perfect for reusable responsive components                  │
+│                                                                 │
+│  Combined                                                       │
+│  ✓ MediaQuery for global context                               │
+│  ✓ LayoutBuilder for local layout decisions                    │
+│  ✓ Best of both worlds                                         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### How Responsive Design Improves UX
+
+| Benefit | Impact |
+|---------|--------|
+| **Readability** | Text is always comfortable size |
+| **Navigation** | Controls are appropriately sized |
+| **Content Flow** | Information hierarchy is maintained |
+| **Efficiency** | More content visible on larger screens |
+| **Consistency** | Same app experience across devices |
 
 ---
 
