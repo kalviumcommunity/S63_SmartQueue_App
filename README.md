@@ -10,21 +10,22 @@ This project serves as both a functional application and a learning resource for
 
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
-3. [State Management with setState](#state-management-with-setstate)
-4. [User Input Forms](#user-input-forms)
-5. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
-6. [Responsive Layout Design](#responsive-layout-design)
-7. [Multi-Screen Navigation](#multi-screen-navigation)
-8. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-9. [Widget Tree Concept](#widget-tree-concept)
-10. [Reactive UI Model](#reactive-ui-model)
-11. [Setup Steps Documentation](#setup-steps-documentation)
-12. [Setup Verification](#setup-verification)
-13. [Folder Structure Explanation](#folder-structure-explanation)
-14. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-15. [Flutter Development Tools](#flutter-development-tools)
-16. [Reflection](#reflection)
-17. [Quick Reference Commands](#quick-reference-commands)
+3. [Reusable Custom Widgets](#reusable-custom-widgets)
+4. [State Management with setState](#state-management-with-setstate)
+5. [User Input Forms](#user-input-forms)
+6. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
+7. [Responsive Layout Design](#responsive-layout-design)
+8. [Multi-Screen Navigation](#multi-screen-navigation)
+9. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+10. [Widget Tree Concept](#widget-tree-concept)
+11. [Reactive UI Model](#reactive-ui-model)
+12. [Setup Steps Documentation](#setup-steps-documentation)
+13. [Setup Verification](#setup-verification)
+14. [Folder Structure Explanation](#folder-structure-explanation)
+15. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+16. [Flutter Development Tools](#flutter-development-tools)
+17. [Reflection](#reflection)
+18. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -79,6 +80,481 @@ Understanding the Flutter project structure is fundamental for:
 6. **Onboarding**: Help new team members understand the codebase quickly
 
 A well-organized project structure is not just about aesthetics—it directly impacts development speed, code maintainability, and team productivity. Investing time in understanding and implementing proper structure pays dividends throughout the project lifecycle.
+
+---
+
+## Reusable Custom Widgets
+
+This section demonstrates how to create modular, reusable UI components that can be used across multiple screens with different configurations.
+
+### Overview
+
+Custom widgets are the building blocks of scalable Flutter applications. By extracting common UI patterns into reusable components, we reduce code duplication and ensure consistency.
+
+**Location**: `lib/widgets/` and `lib/screens/widgets_demo/widgets_showcase_screen.dart`
+
+The SmartQueue project includes several reusable widgets:
+- **CustomButton** - Configurable button with variants, sizes, and states
+- **InfoCard** - Information display card with icons and actions
+- **StatCard** - Statistics card with trends and progress
+- **OrderCard** - Order/queue item card with expandable details
+
+---
+
+### Custom Widget Architecture
+
+#### Folder Structure
+
+```
+lib/
+├── widgets/
+│   ├── widgets.dart           # Export file for all widgets
+│   ├── buttons/
+│   │   └── custom_button.dart # CustomButton widget
+│   └── cards/
+│       ├── info_card.dart     # InfoCard widget
+│       ├── stat_card.dart     # StatCard widget
+│       └── order_card.dart    # OrderCard widget
+└── screens/
+    └── widgets_demo/
+        └── widgets_showcase_screen.dart  # Demo screen
+```
+
+#### Widget Export Pattern
+
+```dart
+// lib/widgets/widgets.dart
+export 'buttons/custom_button.dart';
+export 'cards/info_card.dart';
+export 'cards/stat_card.dart';
+export 'cards/order_card.dart';
+
+// Usage in screens
+import 'package:smartqueue_app/widgets/widgets.dart';
+```
+
+---
+
+### CustomButton Widget (Stateful)
+
+A highly configurable button widget with animations, loading states, and multiple variants.
+
+#### Why Stateful?
+
+The button manages internal state:
+- Press animation
+- Loading indicator
+- Hover/focus states
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | `String` | Button text |
+| `onPressed` | `VoidCallback?` | Tap callback |
+| `variant` | `ButtonVariant` | Style variant |
+| `size` | `ButtonSize` | Size preset |
+| `icon` | `IconData?` | Leading icon |
+| `trailingIcon` | `IconData?` | Trailing icon |
+| `isLoading` | `bool` | Show loading spinner |
+| `isDisabled` | `bool` | Disable button |
+| `fullWidth` | `bool` | Take full width |
+| `backgroundColor` | `Color?` | Custom background |
+| `foregroundColor` | `Color?` | Custom text color |
+
+#### Variants
+
+```dart
+enum ButtonVariant {
+  primary,    // Filled primary color
+  secondary,  // Light background
+  outline,    // Border only
+  text,       // No background
+  danger,     // Red/destructive
+  success,    // Green/positive
+}
+```
+
+#### Usage Examples
+
+```dart
+// Primary button with icon
+CustomButton(
+  label: 'Add Order',
+  icon: Icons.add_rounded,
+  onPressed: () => addOrder(),
+)
+
+// Outline button
+CustomButton(
+  label: 'View Details',
+  variant: ButtonVariant.outline,
+  onPressed: () {},
+)
+
+// Loading state
+CustomButton(
+  label: 'Submitting...',
+  isLoading: true,
+  fullWidth: true,
+  onPressed: null,
+)
+
+// Different sizes
+CustomButton(label: 'Small', size: ButtonSize.small, onPressed: () {})
+CustomButton(label: 'Medium', size: ButtonSize.medium, onPressed: () {})
+CustomButton(label: 'Large', size: ButtonSize.large, onPressed: () {})
+```
+
+---
+
+### InfoCard Widget (Stateless)
+
+A versatile information card for displaying content with optional icons and actions.
+
+#### Why Stateless?
+
+- Displays data passed to it
+- No internal mutable state
+- Actions handled via callbacks
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `title` | `String` | Main title |
+| `subtitle` | `String?` | Description text |
+| `value` | `String?` | Right-aligned value |
+| `icon` | `IconData?` | Leading icon |
+| `iconColor` | `Color?` | Icon color |
+| `variant` | `CardVariant` | Style variant |
+| `trailing` | `Widget?` | Custom trailing widget |
+| `onTap` | `VoidCallback?` | Tap callback |
+
+#### Variants
+
+```dart
+enum CardVariant {
+  defaultCard,  // White background, shadow
+  highlighted,  // Primary color background
+  outlined,     // Border only
+  subtle,       // Gray background
+}
+```
+
+#### Usage Examples
+
+```dart
+// Basic info card
+InfoCard(
+  title: 'Order Settings',
+  subtitle: 'Configure preferences',
+  icon: Icons.settings_rounded,
+  onTap: () => openSettings(),
+)
+
+// Card with value
+InfoCard(
+  title: 'Total Revenue',
+  subtitle: 'Today\'s earnings',
+  value: '\$1,234',
+  icon: Icons.attach_money_rounded,
+  iconColor: Color(0xFF10B981),
+)
+
+// Highlighted variant
+InfoCard(
+  title: 'Premium Feature',
+  subtitle: 'Unlock advanced tools',
+  icon: Icons.star_rounded,
+  variant: CardVariant.highlighted,
+)
+
+// With custom trailing widget
+InfoCard(
+  title: 'Queue Status',
+  subtitle: 'Currently serving',
+  icon: Icons.people_rounded,
+  trailing: StatusBadge(text: 'Active'),
+)
+```
+
+---
+
+### StatCard Widget (Stateless)
+
+A statistics display card with optional trends and progress indicators.
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | `String` | Stat label |
+| `value` | `String` | Main value |
+| `icon` | `IconData?` | Card icon |
+| `color` | `Color` | Accent color |
+| `trend` | `double?` | Percentage change |
+| `progress` | `double?` | Progress (0.0-1.0) |
+| `isCompact` | `bool` | Compact mode |
+
+#### Usage Examples
+
+```dart
+// Basic stat card
+StatCard(
+  label: 'Orders Today',
+  value: '47',
+  icon: Icons.receipt_long_rounded,
+  color: Color(0xFF3B82F6),
+)
+
+// With trend indicator
+StatCard(
+  label: 'Revenue',
+  value: '\$1,234',
+  icon: Icons.attach_money_rounded,
+  color: Color(0xFF10B981),
+  trend: 12.5,  // Shows +12.5% with up arrow
+)
+
+// With progress bar
+StatCard(
+  label: 'Daily Goal',
+  value: '47/50',
+  icon: Icons.flag_rounded,
+  color: Color(0xFF6366F1),
+  progress: 0.94,
+)
+
+// Compact mode for grids
+Row(
+  children: [
+    Expanded(child: StatCard(label: 'Queue', value: '5', isCompact: true)),
+    Expanded(child: StatCard(label: 'Ready', value: '2', isCompact: true)),
+  ],
+)
+```
+
+---
+
+### OrderCard Widget (Stateful)
+
+A comprehensive order/queue item card with expandable details and actions.
+
+#### Why Stateful?
+
+- Manages expansion state
+- Handles animation
+- Tracks internal UI state
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `String` | Order identifier |
+| `title` | `String` | Order description |
+| `status` | `OrderStatus` | Current status |
+| `customer` | `String?` | Customer name |
+| `time` | `String?` | Time info |
+| `value` | `String?` | Price/value |
+| `showDetails` | `bool` | Enable expansion |
+| `details` | `List<String>?` | Detail items |
+| `onPrimaryAction` | `VoidCallback?` | Primary action |
+| `onSecondaryAction` | `VoidCallback?` | Secondary action |
+| `onDelete` | `VoidCallback?` | Delete action |
+
+#### Status Enum
+
+```dart
+enum OrderStatus {
+  queued,     // Blue - waiting
+  preparing,  // Orange - in progress
+  ready,      // Green - completed
+  completed,  // Purple - delivered
+  cancelled,  // Red - cancelled
+}
+```
+
+#### Usage Examples
+
+```dart
+// Basic order card
+OrderCard(
+  id: 'ORD-001',
+  title: '2x Burger, 1x Fries',
+  status: OrderStatus.queued,
+  customer: 'John Doe',
+  time: '2 min ago',
+  value: '\$24.99',
+)
+
+// With expandable details
+OrderCard(
+  id: 'ORD-002',
+  title: '1x Pizza Margherita',
+  status: OrderStatus.preparing,
+  showDetails: true,
+  details: [
+    '1x Large Pizza',
+    '2x Garlic Bread',
+    'Extra cheese',
+  ],
+  onPrimaryAction: () => markReady(),
+)
+
+// With multiple actions
+OrderCard(
+  id: 'ORD-003',
+  title: '3x Tacos',
+  status: OrderStatus.ready,
+  onPrimaryAction: () => deliver(),
+  onSecondaryAction: () => complete(),
+  onDelete: () => cancel(),
+)
+```
+
+---
+
+### Widget Reusability Across Screens
+
+#### Same Widget, Different Configurations
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    WIDGET REUSABILITY                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   CustomButton used in:                                         │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ Screen A: Primary, Large, "Submit Order"                │  │
+│   │ Screen B: Outline, Small, "View Details"                │  │
+│   │ Screen C: Danger, Medium, "Cancel"                      │  │
+│   │ Screen D: Success, Full Width, "Complete"               │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   StatCard used in:                                             │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ Dashboard: Full size with trends                        │  │
+│   │ Overview:  Compact in 3-column grid                     │  │
+│   │ Reports:   With progress bars                           │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   OrderCard used in:                                            │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ Queue List: Full details, actions                       │  │
+│   │ Dashboard:  Simplified, no expand                       │  │
+│   │ History:    Completed status, view only                 │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Visual Evidence
+
+> **Screenshot Placeholder**: [Insert Screenshot - CustomButton Variants]
+> 
+> *Shows all button variants (primary, secondary, outline, danger, success) and sizes (small, medium, large) in the Buttons tab*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Card Widgets]
+> 
+> *Shows InfoCard, StatCard, and OrderCard widgets with different configurations in the Cards tab*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Combined Dashboard]
+> 
+> *Shows all widgets working together in a dashboard layout, demonstrating reusability*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Same Widget Different Screens]
+> 
+> *Shows the same CustomButton widget used in different contexts across multiple screens*
+
+---
+
+### Benefits of Custom Widgets
+
+#### 1. Code Reusability
+
+```dart
+// Without custom widgets: 50+ lines repeated everywhere
+Container(
+  padding: EdgeInsets.all(16),
+  decoration: BoxDecoration(
+    color: Colors.blue,
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Row(children: [Icon(...), Text(...)]),
+)
+
+// With custom widgets: 1 line
+CustomButton(label: 'Submit', onPressed: () {})
+```
+
+#### 2. Consistency
+
+- Same styling across all screens
+- Changes propagate automatically
+- No visual inconsistencies
+
+#### 3. Maintainability
+
+- Fix bugs in one place
+- Update design system easily
+- Clear separation of concerns
+
+#### 4. Testability
+
+- Test widget logic independently
+- Mock callbacks easily
+- Predictable behavior
+
+---
+
+### Custom Widgets Reflection
+
+#### How Reusable Widgets Improve Efficiency
+
+1. **Development Speed**
+   - Build UI faster with pre-made components
+   - Less copy-paste, fewer errors
+   - Focus on business logic, not UI details
+
+2. **Design Consistency**
+   - All buttons look the same
+   - All cards follow same patterns
+   - Brand identity maintained
+
+3. **Code Quality**
+   - DRY principle (Don't Repeat Yourself)
+   - Smaller, focused components
+   - Easier code reviews
+
+#### Challenges in Widget Design
+
+1. **Finding the Right Abstraction**
+   - Too specific: Not reusable enough
+   - Too generic: Too complex to use
+   - Balance: Sensible defaults + customization
+
+2. **API Design**
+   - Which properties to expose?
+   - Naming conventions
+   - Default values
+
+3. **State Management**
+   - When to use Stateless vs Stateful?
+   - Where does state live?
+   - How to communicate changes?
+
+#### Scaling in Team Projects
+
+| Aspect | Benefit |
+|--------|---------|
+| **Onboarding** | New developers use existing widgets |
+| **Design System** | Widgets enforce design guidelines |
+| **Code Reviews** | Reviewers know widget patterns |
+| **Documentation** | Widget API serves as reference |
+| **Collaboration** | Teams can work on different widgets |
 
 ---
 
