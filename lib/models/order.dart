@@ -1,4 +1,4 @@
-/// Order model for vendor queue items stored in Supabase.
+/// Order model for vendor queue items stored in Firestore.
 class Order {
   final String id;
   final String title;
@@ -14,21 +14,24 @@ class Order {
     this.userId,
   });
 
-  factory Order.fromMap(Map<String, dynamic> map) {
+  /// Parse from Firestore document.
+  factory Order.fromFirestore(String id, Map<String, dynamic> data) {
+    final created = data['created_at'];
+    DateTime createdAt;
+    if (created == null) {
+      createdAt = DateTime.now();
+    } else if (created is DateTime) {
+      createdAt = created;
+    } else {
+      createdAt = (created as dynamic).toDate();
+    }
     return Order(
-      id: (map['id'] ?? '').toString(),
-      title: map['title'] as String,
-      status: map['status'] as String? ?? 'Queued',
-      createdAt: DateTime.parse(map['created_at'] as String),
-      userId: map['user_id'] as String?,
+      id: id,
+      title: data['title'] as String? ?? '',
+      status: data['status'] as String? ?? 'Queued',
+      createdAt: createdAt,
+      userId: data['user_id'] as String?,
     );
-  }
-
-  Map<String, dynamic> toInsertMap() {
-    return {
-      'title': title,
-      'status': status,
-    };
   }
 
   Map<String, dynamic> toUpdateMap() {

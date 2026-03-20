@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../models/order.dart';
 import '../services/auth_service.dart';
 import '../services/order_service.dart';
-import '../services/supabase/supabase_config.dart';
 import '../utils/responsive.dart';
 import 'login_screen.dart';
 
@@ -169,7 +167,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     final theme = Theme.of(context);
     final padding = Responsive.padding(context);
     final sectionSpacing = Responsive.sectionSpacing(context);
-    final user = _authService.currentSession?.user;
+    final user = _authService.currentUser;
     final email = user?.email ?? 'Vendor';
 
     return Scaffold(
@@ -254,7 +252,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Table not found',
+                                'Error loading orders',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   color: theme.colorScheme.error,
                                 ),
@@ -262,27 +260,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Create the tasks table in Supabase.',
-                                style: theme.textTheme.bodyMedium,
+                                '${snapshot.error}',
+                                style: theme.textTheme.bodySmall,
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 24),
-                              FilledButton.icon(
-                                onPressed: () async {
-                                  final uri = Uri.parse(
-                                    SupabaseConfig.setupSqlEditorUrl,
-                                  );
-                                  if (await canLaunchUrl(uri)) {
-                                    await launchUrl(uri,
-                                        mode: LaunchMode.externalApplication);
-                                  }
-                                },
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('Open Supabase SQL Editor'),
-                              ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 8),
                               Text(
-                                'Then run the SQL from\nsupabase/migrations/000_create_tasks_table.sql',
+                                'Ensure Firestore is enabled in Firebase Console.',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),

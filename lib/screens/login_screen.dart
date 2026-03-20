@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/auth_service.dart';
 import 'signup_screen.dart';
@@ -50,16 +50,21 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (error) {
       String message = 'Something went wrong. Please try again.';
-      if (error is AuthException) {
-        final errMsg = error.message.toLowerCase();
-        if (errMsg.contains('invalid login credentials')) {
-          message = 'Incorrect email or password. Please try again.';
-        } else if (errMsg.contains('email not confirmed') ||
-            errMsg.contains('email_not_confirmed')) {
-          message =
-              'Please confirm your email. Check your inbox and click the link.';
-        } else {
-          message = error.message;
+      if (error is FirebaseAuthException) {
+        switch (error.code) {
+          case 'user-not-found':
+          case 'wrong-password':
+          case 'invalid-credential':
+            message = 'Incorrect email or password. Please try again.';
+            break;
+          case 'user-disabled':
+            message = 'This account has been disabled.';
+            break;
+          case 'email-not-verified':
+            message = 'Please confirm your email. Check your inbox.';
+            break;
+          default:
+            message = error.message ?? message;
         }
       }
       if (mounted) {

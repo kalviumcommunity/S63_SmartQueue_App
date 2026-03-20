@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/auth_service.dart';
 
@@ -50,28 +50,22 @@ class _AuthScreenState extends State<AuthScreen> {
     } catch (error) {
       String friendlyMessage = 'Something went wrong. Please try again.';
 
-      if (error is AuthException) {
-        // Use Supabase auth error message when available.
-        final message = error.message.toLowerCase();
-
-        if (message.contains('over_email_send_rate_limit') ||
-            message.contains('rate limit')) {
-          friendlyMessage =
-              'You have requested too many sign-up emails.\nPlease wait for about a minute before trying again.';
-        } else if (message.contains('email not confirmed') ||
-            message.contains('email_not_confirmed')) {
-          friendlyMessage =
-              'Your email address is not confirmed yet.\nPlease open the confirmation email from Supabase and click the link, then try logging in again.';
-        } else if (message.contains('invalid login credentials')) {
-          friendlyMessage = 'Incorrect email or password. Please try again.';
-        } else {
-          friendlyMessage = error.message;
-        }
-      } else {
-        final raw = error.toString();
-        if (raw.contains('over_email_send_rate_limit')) {
-          friendlyMessage =
-              'You have requested too many sign-up emails.\nPlease wait for about a minute before trying again.';
+      if (error is FirebaseAuthException) {
+        switch (error.code) {
+          case 'user-not-found':
+          case 'wrong-password':
+          case 'invalid-credential':
+            friendlyMessage = 'Incorrect email or password. Please try again.';
+            break;
+          case 'email-already-in-use':
+            friendlyMessage = 'This email is already registered. Try logging in.';
+            break;
+          case 'too-many-requests':
+            friendlyMessage =
+                'Too many requests. Please wait a minute and try again.';
+            break;
+          default:
+            friendlyMessage = error.message ?? friendlyMessage;
         }
       }
 

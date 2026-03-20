@@ -1,27 +1,26 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import 'supabase_client.dart';
-
+/// Authentication service using Firebase Auth.
 class AuthService {
-  final SupabaseClient _client = SupabaseService.client;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Session? get currentSession => _client.auth.currentSession;
+  User? get currentUser => _auth.currentUser;
 
-  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   Future<void> signUp({
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signUp(
+    final result = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
-      // Optional: set a redirect URL for email confirmation if needed.
-      // emailRedirectTo: 'io.supabase.flutter://login-callback/',
     );
-
-    if (response.user == null) {
-      throw AuthException('Signup failed. Please try again.');
+    if (result.user == null) {
+      throw FirebaseAuthException(
+        code: 'signup-failed',
+        message: 'Signup failed. Please try again.',
+      );
     }
   }
 
@@ -29,14 +28,13 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    await _client.auth.signInWithPassword(
+    await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
   }
 
   Future<void> signOut() async {
-    await _client.auth.signOut();
+    await _auth.signOut();
   }
 }
-
