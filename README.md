@@ -10,14 +10,15 @@ This project serves as both a functional application and a learning resource for
 
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
-3. [Widget Tree Concept](#widget-tree-concept)
-4. [Reactive UI Model](#reactive-ui-model)
-5. [Setup Steps Documentation](#setup-steps-documentation)
-6. [Setup Verification](#setup-verification)
-7. [Folder Structure Explanation](#folder-structure-explanation)
-8. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-9. [Reflection](#reflection)
-10. [Quick Reference Commands](#quick-reference-commands)
+3. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+4. [Widget Tree Concept](#widget-tree-concept)
+5. [Reactive UI Model](#reactive-ui-model)
+6. [Setup Steps Documentation](#setup-steps-documentation)
+7. [Setup Verification](#setup-verification)
+8. [Folder Structure Explanation](#folder-structure-explanation)
+9. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+10. [Reflection](#reflection)
+11. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -72,6 +73,292 @@ Understanding the Flutter project structure is fundamental for:
 6. **Onboarding**: Help new team members understand the codebase quickly
 
 A well-organized project structure is not just about aesthetics—it directly impacts development speed, code maintainability, and team productivity. Investing time in understanding and implementing proper structure pays dividends throughout the project lifecycle.
+
+---
+
+## Stateless vs Stateful Widgets
+
+### Overview
+
+In Flutter, widgets are the fundamental building blocks of the user interface. Every visual element—from a simple text label to a complex animated button—is a widget. Flutter provides two primary types of widgets based on whether they need to manage changing data:
+
+1. **Stateless Widgets** - For static, unchanging UI
+2. **Stateful Widgets** - For dynamic, interactive UI
+
+Understanding when to use each type is crucial for building efficient Flutter applications.
+
+---
+
+### What is a Stateless Widget?
+
+A **Stateless Widget** is a widget that does not require mutable state. Once built, its appearance and behavior remain constant throughout its lifetime. It cannot change dynamically in response to user interaction or data updates.
+
+#### Characteristics
+
+| Property | Description |
+|----------|-------------|
+| **Immutable** | Properties cannot change after construction |
+| **No setState()** | Cannot trigger UI rebuilds internally |
+| **Simpler** | Less code, easier to understand |
+| **Performance** | Lightweight, no state management overhead |
+| **build() called once** | Only rebuilds when parent rebuilds |
+
+#### Code Structure
+
+```dart
+class StaticHeaderSection extends StatelessWidget {
+  const StaticHeaderSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(
+        children: [
+          Text('SmartQueue'),           // Never changes
+          Text('Order Management'),      // Never changes
+          Icon(Icons.storefront),        // Never changes
+        ],
+      ),
+    );
+  }
+}
+```
+
+#### When to Use Stateless Widgets
+
+- **Static content**: Headers, titles, labels, descriptions
+- **Icons and images**: Static visual elements
+- **Layout containers**: Structural widgets like `Row`, `Column`, `Container`
+- **Decorative elements**: Dividers, spacers, borders
+- **Display-only data**: Text that shows data but doesn't change locally
+
+#### Real-World Examples in SmartQueue
+
+```
+StaticHeaderSection (Stateless)
+├── App logo and branding
+├── "SmartQueue" title text
+├── "Intelligent Order Management" subtitle
+├── Feature chips (Fast, Reliable, Cloud Sync)
+└── Informational description
+```
+
+---
+
+### What is a Stateful Widget?
+
+A **Stateful Widget** is a widget that maintains mutable state. It can change its appearance dynamically in response to user interactions, timer events, or data changes. When state changes, the widget rebuilds to reflect the new state.
+
+#### Characteristics
+
+| Property | Description |
+|----------|-------------|
+| **Mutable State** | Can hold variables that change over time |
+| **setState()** | Method to trigger UI rebuilds |
+| **Two Classes** | Widget class + State class |
+| **Lifecycle** | Has initState(), dispose(), and other lifecycle methods |
+| **Rebuilds** | build() called whenever setState() is invoked |
+
+#### Code Structure
+
+```dart
+class DynamicQueueSection extends StatefulWidget {
+  const DynamicQueueSection({super.key});
+
+  @override
+  State<DynamicQueueSection> createState() => _DynamicQueueSectionState();
+}
+
+class _DynamicQueueSectionState extends State<DynamicQueueSection> {
+  // State variables - can change
+  int _queueCount = 0;
+  String _statusMessage = 'Ready';
+
+  // Method to update state
+  void _addToQueue() {
+    setState(() {
+      _queueCount++;                              // State changes
+      _statusMessage = 'Order added!';            // State changes
+    });
+    // Flutter automatically rebuilds the UI
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text('Queue: $_queueCount'),              // Displays current state
+        Text(_statusMessage),                      // Displays current state
+        ElevatedButton(
+          onPressed: _addToQueue,                  // Triggers state change
+          child: Text('Add Order'),
+        ),
+      ],
+    );
+  }
+}
+```
+
+#### When to Use Stateful Widgets
+
+- **User input**: Forms, text fields, checkboxes
+- **Interactive elements**: Buttons that change appearance
+- **Animations**: Animated widgets with changing values
+- **Dynamic data**: Counters, timers, live feeds
+- **Toggle states**: Switches, expandable panels
+- **Selections**: Tabs, dropdowns, radio buttons
+
+#### Real-World Examples in SmartQueue
+
+```
+DynamicQueueSection (Stateful)
+├── Queue counter (changes on button press)
+├── Preparing counter (changes when orders move)
+├── Completed counter (changes when orders finish)
+├── Status message (changes based on actions)
+├── Status color (changes based on context)
+└── Interactive buttons (trigger state changes)
+```
+
+---
+
+### Comparison Table
+
+| Aspect | Stateless Widget | Stateful Widget |
+|--------|------------------|-----------------|
+| **State** | No internal state | Maintains mutable state |
+| **Mutability** | Immutable | Mutable |
+| **Rebuilds** | Only when parent rebuilds | When setState() is called |
+| **Complexity** | Simple, single class | Two classes (Widget + State) |
+| **Performance** | Slightly faster | Slight overhead for state management |
+| **Use Case** | Static UI elements | Interactive/dynamic UI |
+| **Example** | Labels, icons, images | Forms, counters, animations |
+
+---
+
+### Demo Application
+
+The SmartQueue project includes a dedicated demo screen that visually demonstrates the difference between Stateless and Stateful widgets.
+
+**Location**: `lib/screens/demo/stateless_stateful_demo.dart`
+
+#### Demo Features
+
+| Section | Widget Type | Behavior |
+|---------|-------------|----------|
+| **Header Section** | Stateless | Shows app branding, title, and static info chips. Never changes regardless of interaction. |
+| **Queue Management** | Stateful | Displays counters and status. Updates dynamically when buttons are pressed. |
+| **Comparison Card** | Stateless | Shows educational comparison information. Static content. |
+
+#### How the Demo Works
+
+1. **Static Header (Stateless)**
+   - Displays "SmartQueue" branding
+   - Shows feature chips: Fast, Reliable, Cloud Sync
+   - Content remains unchanged no matter what you do
+
+2. **Dynamic Queue (Stateful)**
+   - Three counters: Queued, Preparing, Completed
+   - Four action buttons: Add Order, Start Prep, Complete, Reset
+   - Each button triggers `setState()` which rebuilds the UI
+   - Status message and color change based on action
+
+3. **User Interaction Flow**
+   ```
+   User taps "Add Order"
+        ↓
+   _addToQueue() method called
+        ↓
+   setState(() { _queueCount++; })
+        ↓
+   Flutter marks widget as dirty
+        ↓
+   build() method called
+        ↓
+   UI displays new count: 1
+   ```
+
+---
+
+### Visual Documentation
+
+> **Screenshot Placeholder**: [Insert Screenshot - Initial Demo State]
+> 
+> *Shows the demo screen with all counters at 0 and default status message*
+
+> **Screenshot Placeholder**: [Insert Screenshot - After Interactions]
+> 
+> *Shows the demo screen after adding orders: Queue count increased, status message changed to "New order added!", blue status indicator*
+
+> **Screenshot Placeholder**: [Insert Screenshot - Order Workflow Complete]
+> 
+> *Shows the demo after completing full workflow: Completed count increased, green status indicator, success message*
+
+---
+
+### Why Separating Static and Dynamic UI Matters
+
+#### 1. Performance Optimization
+
+```
+When setState() is called:
+
+Stateful Widget Tree:
+    DynamicSection ← REBUILDS
+        ├── Counter ← REBUILDS (state changed)
+        ├── Button  ← REBUILDS
+        └── Text    ← REBUILDS
+
+Stateless Widget Tree:
+    StaticSection ← NOT REBUILT
+        ├── Logo    ← NOT REBUILT
+        ├── Title   ← NOT REBUILT
+        └── Info    ← NOT REBUILT
+
+Result: Only dynamic parts rebuild, static parts untouched
+```
+
+#### 2. Code Organization
+
+- **Stateless widgets** are simpler and easier to test
+- **Stateful widgets** encapsulate their own state management
+- Clear separation makes code more maintainable
+- Easier to identify which parts of UI can change
+
+#### 3. Debugging
+
+- When UI behaves unexpectedly, you know to look at Stateful widgets
+- Stateless widgets are predictable—same input, same output
+- State issues are isolated to specific widgets
+
+#### 4. Reusability
+
+- Stateless widgets are highly reusable across different contexts
+- Stateful widgets can be reused with different initial states
+- Clean separation enables component libraries
+
+---
+
+### Best Practices
+
+| Practice | Description |
+|----------|-------------|
+| **Default to Stateless** | Start with Stateless; upgrade to Stateful only when needed |
+| **Minimize State** | Keep state as low in the tree as possible |
+| **Extract Widgets** | Break complex UIs into smaller, focused widgets |
+| **Use const** | Mark Stateless widgets as `const` for better performance |
+| **Lift State Up** | Share state between widgets by lifting to common ancestor |
+| **Single Responsibility** | Each widget should do one thing well |
+
+---
+
+### Key Takeaways
+
+1. **Stateless** = Static content that never changes after build
+2. **Stateful** = Dynamic content that responds to interaction
+3. **setState()** = The method that triggers UI rebuilds in Stateful widgets
+4. **Performance** = Using the right widget type optimizes app performance
+5. **Clarity** = Proper separation makes code easier to understand and maintain
 
 ---
 
