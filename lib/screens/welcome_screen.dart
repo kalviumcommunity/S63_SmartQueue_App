@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/primary_button.dart';
+import 'firebase_connection_demo.dart';
 import 'responsive_home.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -88,6 +89,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   },
                   icon: const Icon(Icons.dashboard_rounded),
                   label: const Text('Go to Dashboard'),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const FirebaseConnectionDemoScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Firebase connection status'),
                 ),
               ],
             ),
