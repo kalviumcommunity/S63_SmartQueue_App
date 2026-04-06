@@ -125,10 +125,10 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = _isLoginMode ? 'SmartQueue Login' : 'SmartQueue Sign Up';
+    final title = _isLoginMode ? 'Vendor Login' : 'Vendor Register';
     final subtitle = _isLoginMode
-        ? 'Vendor access — manage your queue securely'
-        : 'Create your vendor account';
+        ? 'Sign in to manage your stall and queue'
+        : 'Create a SmartQueue vendor account';
 
     return Scaffold(
       body: Container(
@@ -195,7 +195,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                _isLoginMode ? 'Log in' : 'Create account',
+                                _isLoginMode ? 'Log in' : 'Register',
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: const Color(0xFF1E293B),
@@ -204,8 +204,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 _isLoginMode
-                                    ? 'Use the email and password you registered with.'
-                                    : 'Choose a strong password for your vendor account.',
+                                    ? 'Use your vendor email and password.'
+                                    : 'Choose a strong password (at least 6 characters).',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: const Color(0xFF64748B),
                                 ),
@@ -348,7 +348,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               const Divider(height: 28),
                               Text(
-                                'Session: you will stay signed in until you log out from the dashboard.',
+                                'Session: after login, the app opens your dashboard automatically. '
+                                'Log out from the home or queue screen when finished.',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: const Color(0xFF94A3B8),
                                   fontSize: 12,
