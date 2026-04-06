@@ -8,7 +8,7 @@ import '../../core/animations/animated_gradient.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/animated_button.dart';
 import '../../services/auth_service.dart';
-import 'login_screen_v2.dart';
+import '../auth_screen.dart';
 
 class SignupScreenV2 extends StatefulWidget {
   const SignupScreenV2({super.key});
@@ -152,7 +152,7 @@ class _SignupScreenV2State extends State<SignupScreenV2>
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
               pageBuilder: (context, animation, secondaryAnimation) =>
-                  const LoginScreenV2(),
+                  const AuthScreen(),
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 return SlideTransition(
                   position: Tween<Offset>(
