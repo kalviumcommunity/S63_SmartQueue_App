@@ -117,7 +117,7 @@ main()
   → runApp(SmartQueueApp(firebaseReady: …))
 ```
 
-- If initialization **succeeds**, `firebaseReady` is `true` and the app uses the auth gate (`AuthScreen` / `VendorDashboardV2`).
+- If initialization **succeeds**, `firebaseReady` is `true` and the app uses the auth gate (`AuthScreen` when signed out, `HomeScreen` when signed in).
 - If it **fails**, the app shows `WelcomeScreen` so you can still explore UI demos; open **Firebase connection status** from that screen to see the failure state.
 
 ### Verifying the connection in the UI
@@ -281,9 +281,43 @@ No Authentication, Firestore queries, Analytics events, or FCM are implemented i
 
 ### Overview
 
-SmartQueue uses **Firebase Authentication** with **Email/Password** only (no Google, OTP, or phone flows in this module). The main UI is `lib/screens/auth_screen.dart` (`AuthScreen`): one screen with a **login / sign-up toggle**, validated fields, and feedback via snackbars. Session handling uses `FirebaseAuth.instance.authStateChanges()` in `lib/main.dart` (`_AuthGate`): signed-in users see `VendorDashboardV2`; signed-out users see `AuthScreen`. **Logout** is available from the vendor dashboard app bar and calls `AuthService.signOut()`.
+SmartQueue uses **Firebase Authentication** with **Email/Password** only (no Google, OTP, or phone in this module).
 
-**Service layer**: `lib/services/auth_service.dart` — `signIn`, `signUp`, `signOut`, `userFacingMessage` for readable errors.
+| Layer | Role |
+|-------|------|
+| **`lib/main.dart` → `_AuthGate`** | `StreamBuilder<User?>` on `AuthService.authStateChanges` — **only** place that chooses auth vs app shell. No `Navigator.push` to login/logout. |
+| **`lib/screens/auth_screen.dart`** | **Vendor Login / Vendor Register** toggle, validated email & password, confirm password on sign-up, snackbar feedback. |
+| **`lib/screens/home_screen.dart`** | Authenticated **Dashboard / Queue Management** landing: welcome, **email**, **logout**, and button to open the full **`VendorDashboardV2`** queue board. |
+| **`lib/services/auth_service.dart`** | `signIn`, `signUp`, `signOut`, `userFacingMessage` for friendly errors. |
+
+### Authentication flow architecture
+
+```
+FirebaseAuth.authStateChanges()
+         │
+         ▼
+   ┌─────────────┐     user == null      ┌─────────────┐
+   │  _AuthGate  │ ───────────────────►  │  AuthScreen │
+   │ StreamBuilder│                       │ (login/reg)  │
+   └─────────────┘                       └─────────────┘
+         │
+         │ user != null
+         ▼
+   ┌─────────────┐     optional push     ┌──────────────────┐
+   │  HomeScreen │ ───────────────────►  │ VendorDashboardV2 │
+   │  dashboard  │                       │ (orders & queue)   │
+   └─────────────┘                       └──────────────────┘
+         │
+         │ signOut() anywhere
+         ▼
+   stream emits null → AuthScreen again (automatic)
+```
+
+- **Sign up / Log in**: After Firebase succeeds, the **same stream** updates; `_AuthGate` swaps `AuthScreen` for `HomeScreen` without you calling `Navigator.pushReplacement` for auth.
+- **Log out**: `AuthService.signOut()` from **HomeScreen** or **VendorDashboardV2** → stream emits `null` → `_AuthGate` shows `AuthScreen` again.
+- **Queue board**: `HomeScreen` uses `Navigator.push` only for **in-app** access to the rich vendor UI — not for authentication routing.
+
+**Service layer**: `lib/services/auth_service.dart`.
 
 ### Enable Email/Password in Firebase Console (beginner steps)
 
@@ -300,40 +334,48 @@ SmartQueue uses **Firebase Authentication** with **Email/Password** only (no Goo
 - `firebase_core` — initialized before `runApp` (see [Firebase Setup](#firebase-setup-and-connection)).
 - `firebase_auth` — declared in `pubspec.yaml`; run `flutter pub get` after changes.
 
-### Login and sign-up flow
+### Sign up, login, and logout
 
 | Step | What happens |
 |------|----------------|
-| **Sign up** | User switches to **Sign up**, enters email, password, confirm password → `createUserWithEmailAndPassword` → Firebase creates the user and signs them in by default → `_AuthGate` shows the dashboard. |
-| **Log in** | User stays on **Log in**, enters credentials → `signInWithEmailAndPassword` → stream emits user → dashboard. |
-| **Validation** | Email format and non-empty fields; password minimum length **6** (Firebase requirement); confirm password must match on sign-up. |
-| **Errors** | `FirebaseAuthException` codes are mapped to short messages via `AuthService.userFacingMessage`. |
-| **Success** | Green snackbars (root messenger) confirm sign-in or account creation. |
-| **Logout** | Dashboard **logout** icon → `signOut()` → stream emits `null` → `AuthScreen` again. |
+| **Sign up** | Toggle **Vendor Register** → email, password, confirm → `createUserWithEmailAndPassword` → Firebase signs the user in → `authStateChanges` emits `User` → **`HomeScreen`** appears. |
+| **Log in** | **Vendor Login** → `signInWithEmailAndPassword` → same stream → **`HomeScreen`**. |
+| **Validation** | Non-empty email with basic format check; password **≥ 6** characters; passwords must match on register. |
+| **Errors** | Invalid email, wrong password, weak password, email already in use, network failures → `AuthService.userFacingMessage` → red snackbars. |
+| **Success** | Green snackbars via `rootScaffoldMessengerKey` (login/register). |
+| **Logout** | **Log out** on `HomeScreen` or queue board → `signOut()` → stream emits `null` → **`AuthScreen`** (no manual “go to login” route). |
 
-### Auth state
+### Real-time auth state
 
-`StreamBuilder` on `authStateChanges` avoids manual navigation after login/logout: the tree **reacts** to Firebase auth state. A global `rootScaffoldMessengerKey` (`lib/core/root_messenger.dart`) is attached to `MaterialApp` so success snackbars still show when the auth screen is replaced by the dashboard.
+`FirebaseAuth.instance.authStateChanges()` pushes **every** sign-in, sign-out, and token-refresh-related transition relevant to the session. `_AuthGate` subscribes once; the widget tree **switches** between `AuthScreen` and `HomeScreen`. That removes duplicated navigation logic and matches how production Firebase apps are structured.
+
+`lib/core/root_messenger.dart` provides a **global** `ScaffoldMessenger` so brief success messages still appear when the active route changes right after login.
 
 ### Visual evidence
 
-> **Screenshot Placeholder**: [Insert screenshot – SmartQueue Login (`AuthScreen`)]
+> **Screenshot Placeholder**: [Insert screenshot – Vendor Login (`AuthScreen`)]
 >
-> *Shows gradient header, email/password fields, and Log in button.*
+> *Gradient header, email/password, Log in.*
 
-> **Screenshot Placeholder**: [Insert screenshot – SmartQueue Sign Up mode]
+> **Screenshot Placeholder**: [Insert screenshot – Vendor Register mode]
 >
-> *Shows confirm password and Create account.*
+> *Confirm password and Create account.*
+
+> **Screenshot Placeholder**: [Insert screenshot – Home / Dashboard (`HomeScreen`)]
+>
+> *Welcome message, account email, Open vendor queue board, Log out.*
 
 > **Screenshot Placeholder**: [Insert screenshot – Firebase Console → Authentication → Users]
 >
-> *Shows registered email accounts.*
+> *Registered vendor emails.*
 
 ### Authentication reflection
 
-- **How Firebase simplifies auth**: No custom password storage, token issuance, or session tables—Firebase handles credentials securely and exposes `User` + streams to Flutter.
-- **Benefits vs a custom backend**: Less server code, built-in account recovery hooks (if you enable them later), scalable infrastructure, and rules that pair naturally with Firestore for order data.
-- **Challenges**: Email/Password must be turned on in the Console (`operation-not-allowed` otherwise); weak passwords return `weak-password`; testing requires a real or emulated device with network access. The app surfaces these as friendly snackbar text.
+- **End-to-end flow**: User interacts only with `AuthScreen` or post-login shells; Firebase persists the session; `_AuthGate` always reflects the latest `User?` from the stream, so the UI and security state stay aligned.
+- **Why the stream simplifies navigation**: You do not push/pop a “login route” after `signIn` or `signOut`. Fewer bugs (no double stacks, no “back” to a stale logged-in screen) and a single source of truth for “who is using the app”.
+- **Why logout matters**: Ends the Firebase session on the device, clears credentials from memory for normal use, and is required for shared devices (e.g. stall tablets) so the next vendor is not in the previous account.
+- **Challenges**: Console must enable Email/Password; package name and `google-services.json` must match; weak or reused passwords trigger Firebase errors—mapped to clear copy in the UI.
+- **Firebase vs custom backend**: No password database to maintain, tokens and refresh handled by the SDK, and the same patterns scale to more providers later if you add them.
 
 ---
 
