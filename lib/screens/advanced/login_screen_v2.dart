@@ -10,6 +10,7 @@ import '../../core/widgets/animated_button.dart';
 import '../../services/auth_service.dart';
 import '../../services/firebase_app.dart';
 import '../firebase_connection_demo.dart';
+import '../flutterfire_cli_demo.dart';
 import 'signup_screen_v2.dart';
 import 'vendor_dashboard_v2.dart';
 
@@ -385,6 +386,26 @@ class _LoginScreenV2State extends State<LoginScreenV2>
                                   },
                                   child: Text(
                                     'Firebase connection status',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.85),
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            const FlutterfireCliDemoScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'FlutterFire CLI demo',
                                     style: TextStyle(
                                       color: Theme.of(context)
                                           .colorScheme
