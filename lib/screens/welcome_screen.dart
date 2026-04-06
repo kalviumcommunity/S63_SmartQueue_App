@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/primary_button.dart';
 import 'firebase_connection_demo.dart';
+import 'flutterfire_cli_demo.dart';
 import 'responsive_home.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -100,6 +101,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     );
                   },
                   child: const Text('Firebase connection status'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const FlutterfireCliDemoScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('FlutterFire CLI demo'),
                 ),
               ],
             ),

@@ -11,25 +11,26 @@ This project serves as both a functional application and a learning resource for
 1. [Project Description](#project-description)
 2. [Project Structure Summary](#project-structure-summary)
 3. [Firebase Setup and Connection](#firebase-setup-and-connection)
-4. [Animations and Transitions](#animations-and-transitions)
-5. [Asset Management (Images & Icons)](#asset-management-images--icons)
-6. [Responsive Design with MediaQuery & LayoutBuilder](#responsive-design-with-mediaquery--layoutbuilder)
-7. [Reusable Custom Widgets](#reusable-custom-widgets)
-8. [State Management with setState](#state-management-with-setstate)
-9. [User Input Forms](#user-input-forms)
-10. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
-11. [Responsive Layout Design](#responsive-layout-design)
-12. [Multi-Screen Navigation](#multi-screen-navigation)
-13. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-14. [Widget Tree Concept](#widget-tree-concept)
-15. [Reactive UI Model](#reactive-ui-model)
-16. [Setup Steps Documentation](#setup-steps-documentation)
-17. [Setup Verification](#setup-verification)
-18. [Folder Structure Explanation](#folder-structure-explanation)
-19. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-20. [Flutter Development Tools](#flutter-development-tools)
-21. [Reflection](#reflection)
-22. [Quick Reference Commands](#quick-reference-commands)
+4. [FlutterFire CLI Integration](#flutterfire-cli-integration)
+5. [Animations and Transitions](#animations-and-transitions)
+6. [Asset Management (Images & Icons)](#asset-management-images--icons)
+7. [Responsive Design with MediaQuery & LayoutBuilder](#responsive-design-with-mediaquery--layoutbuilder)
+8. [Reusable Custom Widgets](#reusable-custom-widgets)
+9. [State Management with setState](#state-management-with-setstate)
+10. [User Input Forms](#user-input-forms)
+11. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
+12. [Responsive Layout Design](#responsive-layout-design)
+13. [Multi-Screen Navigation](#multi-screen-navigation)
+14. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+15. [Widget Tree Concept](#widget-tree-concept)
+16. [Reactive UI Model](#reactive-ui-model)
+17. [Setup Steps Documentation](#setup-steps-documentation)
+18. [Setup Verification](#setup-verification)
+19. [Folder Structure Explanation](#folder-structure-explanation)
+20. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+21. [Flutter Development Tools](#flutter-development-tools)
+22. [Reflection](#reflection)
+23. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -83,7 +84,7 @@ This section describes how Firebase is integrated with SmartQueue, how to recrea
 - **Android**: `android/app/google-services.json` must match your Firebase Android app (package name `com.example.smartqueue_app`). The Google Services Gradle plugin is applied as required by FlutterFire.
 - **Flutter options**: `lib/firebase_options.dart` holds the `FirebaseOptions` used on Android (generated or maintained to match your Firebase project).
 - **Startup initialization**: `FirebaseAppService.initialize()` runs in `main()` **before** `runApp()`, so Firebase Core is ready when the widget tree builds.
-- **Demo screen**: `lib/screens/firebase_connection_demo.dart` shows a success or failure state and displays basic project metadata when Core is initialized.
+- **Demo screens**: `lib/screens/firebase_connection_demo.dart` shows connection status and project metadata; `lib/screens/flutterfire_cli_demo.dart` explains and confirms FlutterFire-style configuration (`firebase_options.dart`).
 
 ### Beginner guide: Firebase Console and Android app
 
@@ -121,8 +122,8 @@ main()
 ### Verifying the connection in the UI
 
 1. Run the app on a device or emulator with a valid `google-services.json` and matching `firebase_options.dart`.
-2. On the **login** screen, tap **Firebase connection status** (shown when Core initialized).
-3. You should see **SmartQueue connected to Firebase successfully** (green header) and read-only fields such as **Project ID** and **App ID**.
+2. On the **login** screen, tap **Firebase connection status** or **FlutterFire CLI demo** (shown when Core initialized).
+3. You should see **SmartQueue connected to Firebase successfully** (connection demo) or **FlutterFire-style config is active** (CLI demo), plus read-only fields such as **Project ID** where applicable.
 
 ### Visual evidence
 
@@ -143,6 +144,135 @@ main()
 - **Why backend integration matters**: Mobile apps often need a shared source of truth for users, orders, and queues. Firebase provides hosted auth, database, and storage so the client can stay thin and secure rules can live on the server side.
 - **Key steps to connect Firebase with Flutter**: Create the Firebase project, register the app with the correct package name, add `google-services.json`, add `firebase_core` (and related packages), initialize with `Firebase.initializeApp`, and verify on a real device or emulator.
 - **Common challenges**: Wrong package name or stale `google-services.json` (fixes: redownload from Console and match `applicationId`); missing or mismatched `firebase_options.dart` on Android (fixes: run `flutterfire configure` or copy values from Console); forgetting `flutter pub get` after dependency changes. Initialization exceptions are caught in `FirebaseAppService` so the app can still launch in a degraded mode while you fix configuration.
+
+---
+
+## FlutterFire CLI Integration
+
+This section documents **Firebase SDK setup for Flutter** using the **FlutterFire CLI**, which is the recommended way to generate consistent, multi-platform configuration.
+
+### What is FlutterFire CLI?
+
+**FlutterFire CLI** is a Dart command-line tool (`flutterfire`) that connects your local Flutter project to a Firebase project in the cloud. It automates the boring parts of wiring **Android**, **iOS**, **Web**, and other targets by generating `lib/firebase_options.dart` and updating native config files where appropriate.
+
+Official reference: [FlutterFire CLI](https://firebase.flutter.dev/docs/cli/).
+
+### Why use it instead of manual configuration?
+
+| Manual setup | FlutterFire CLI |
+|--------------|-----------------|
+| Copy keys by hand into Dart and native files | One guided command: `flutterfire configure` |
+| Easy to mistype API keys or bundle IDs | Reads your Firebase project and writes consistent output |
+| Each platform configured separately | Select multiple platforms in one flow |
+| Harder for beginners | Step-by-step prompts (project, apps, platforms) |
+
+### Advantages for multi-platform Firebase
+
+- **Single source of truth**: `DefaultFirebaseOptions` per platform in one Dart file.
+- **Fewer mistakes**: Generated values match what Firebase expects for each app registration.
+- **Repeatable**: New teammates run the same command after cloning the repo (with Firebase access).
+- **Aligned with FlutterFire docs**: Matches the official Flutter + Firebase guides.
+
+### Simulated installation steps (run on your machine)
+
+These commands are **not** executed automatically by the IDE; run them in your own terminal.
+
+#### 1. Install Firebase CLI tools
+
+Requires [Node.js](https://nodejs.org/) (includes `npm`).
+
+```bash
+npm install -g firebase-tools
+firebase --version
+```
+
+#### 2. Log in to Firebase
+
+```bash
+firebase login
+```
+
+Complete the browser flow so the CLI can access your Firebase projects.
+
+#### 3. Install FlutterFire CLI
+
+```bash
+dart pub global activate flutterfire_cli
+```
+
+Ensure the pub cache `bin` directory is on your **PATH** so `flutterfire` is found (on Windows you may need to add the path shown after activation).
+
+Verify:
+
+```bash
+flutterfire --version
+```
+
+#### 4. Configure the Flutter project
+
+From the **project root** (where `pubspec.yaml` lives):
+
+```bash
+cd /path/to/S63_SmartQueue_App
+flutterfire configure
+```
+
+You will typically:
+
+1. Select your **Firebase project** (or create one in the Console first).
+2. Choose **platforms** (e.g. Android, iOS, Web).
+3. Confirm or register app IDs / bundle IDs as prompted.
+
+The CLI **generates or updates**:
+
+- **`lib/firebase_options.dart`** — `DefaultFirebaseOptions` used by `Firebase.initializeApp(options: …)`.
+- Native files such as **`google-services.json`** (Android) and **`GoogleService-Info.plist`** (iOS) when applicable.
+
+After configuration, run:
+
+```bash
+flutter pub get
+```
+
+### How SmartQueue initializes Firebase (before UI)
+
+Initialization is centralized in `lib/services/firebase_app.dart` and runs in `main()` before `runApp()`:
+
+```dart
+await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+);
+```
+
+The generated `lib/firebase_options.dart` in this repository is the file FlutterFire CLI would produce for the selected platforms; keeping it in sync with your Firebase project is what makes `initializeApp` succeed.
+
+### FlutterFire CLI demo screen
+
+- **File**: `lib/screens/flutterfire_cli_demo.dart` (`FlutterfireCliDemoScreen`).
+- **Purpose**: Confirms that Firebase Core initialized successfully and surfaces a **read-only** summary of the FlutterFire-style setup (including a simulated terminal snippet of the usual commands).
+- **How to open**: On the login screen, tap **FlutterFire CLI demo** (when Firebase initialized). From the welcome screen (offline mode), the same label opens the demo to inspect failure hints.
+
+No Authentication, Firestore queries, Analytics events, or FCM are implemented in this task—only **SDK readiness** and documentation.
+
+### Visual evidence (FlutterFire CLI)
+
+> **Screenshot Placeholder**: [Insert screenshot – terminal: `firebase login`, `flutterfire configure`]
+>
+> *Shows successful CLI commands and project selection.*
+
+> **Screenshot Placeholder**: [Insert screenshot – Firebase Console, registered Android app]
+>
+> *Shows the app linked to the same package name as `android/app/build.gradle.kts`.*
+
+> **Screenshot Placeholder**: [Insert screenshot – `FlutterfireCliDemoScreen` success state]
+>
+> *Shows the in-app confirmation that configuration is active.*
+
+### FlutterFire CLI reflection
+
+- **How FlutterFire CLI simplifies setup**: It removes guesswork by generating `firebase_options.dart` and aligning native config files with the Firebase Console, which is faster and safer than copying keys manually.
+- **CLI vs manual**: Manual setup works but scales poorly across platforms and teams; the CLI encodes best practices and matches official FlutterFire documentation.
+- **Typical challenges**: `firebase login` must be interactive in a real terminal; `flutterfire` not on PATH after `dart pub global activate` (add pub-cache `bin` to PATH); package name / bundle ID mismatch with the Console (fix app registration or `applicationId`). This project catches initialization failures so you can still open demo screens and fix config.
 
 ---
 
