@@ -6,13 +6,13 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 import '../../core/animations/animated_gradient.dart';
+import '../../core/root_messenger.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/shimmer_loading.dart';
 import '../../core/widgets/animated_button.dart';
 import '../../models/order.dart';
 import '../../services/auth_service.dart';
 import '../../services/order_service.dart';
-import 'login_screen_v2.dart';
 
 class VendorDashboardV2 extends StatefulWidget {
   const VendorDashboardV2({super.key});
@@ -188,18 +188,12 @@ class _VendorDashboardV2State extends State<VendorDashboardV2>
                     onPressed: () async {
                       HapticFeedback.mediumImpact();
                       await _authService.signOut();
-                      if (mounted) {
-                        Navigator.of(context).pushAndRemoveUntil(
-                          PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) =>
-                                const LoginScreenV2(),
-                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                              return FadeTransition(opacity: animation, child: child);
-                            },
-                          ),
-                          (route) => false,
-                        );
-                      }
+                      rootScaffoldMessengerKey.currentState?.showSnackBar(
+                        const SnackBar(
+                          content: Text('You have been signed out.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     },
                     icon: Container(
                       padding: const EdgeInsets.all(8),

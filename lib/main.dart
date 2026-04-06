@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'core/root_messenger.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
-import 'screens/advanced/login_screen_v2.dart';
 import 'screens/advanced/vendor_dashboard_v2.dart';
+import 'screens/auth_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firebase_app.dart';
@@ -70,6 +71,7 @@ class _SmartQueueAppState extends State<SmartQueueApp> {
     return MaterialApp(
       title: 'SmartQueue',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
       themeMode: widget.themeProvider.themeMode,
@@ -146,7 +148,7 @@ class _AuthGate extends StatelessWidget {
         if (user != null) {
           return const VendorDashboardV2();
         }
-        return const LoginScreenV2();
+        return const AuthScreen();
       },
     );
   }

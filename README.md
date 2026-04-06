@@ -12,25 +12,26 @@ This project serves as both a functional application and a learning resource for
 2. [Project Structure Summary](#project-structure-summary)
 3. [Firebase Setup and Connection](#firebase-setup-and-connection)
 4. [FlutterFire CLI Integration](#flutterfire-cli-integration)
-5. [Animations and Transitions](#animations-and-transitions)
-6. [Asset Management (Images & Icons)](#asset-management-images--icons)
-7. [Responsive Design with MediaQuery & LayoutBuilder](#responsive-design-with-mediaquery--layoutbuilder)
-8. [Reusable Custom Widgets](#reusable-custom-widgets)
-9. [State Management with setState](#state-management-with-setstate)
-10. [User Input Forms](#user-input-forms)
-11. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
-12. [Responsive Layout Design](#responsive-layout-design)
-13. [Multi-Screen Navigation](#multi-screen-navigation)
-14. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
-15. [Widget Tree Concept](#widget-tree-concept)
-16. [Reactive UI Model](#reactive-ui-model)
-17. [Setup Steps Documentation](#setup-steps-documentation)
-18. [Setup Verification](#setup-verification)
-19. [Folder Structure Explanation](#folder-structure-explanation)
-20. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
-21. [Flutter Development Tools](#flutter-development-tools)
-22. [Reflection](#reflection)
-23. [Quick Reference Commands](#quick-reference-commands)
+5. [Firebase Authentication (Email & Password)](#firebase-authentication-email--password)
+6. [Animations and Transitions](#animations-and-transitions)
+7. [Asset Management (Images & Icons)](#asset-management-images--icons)
+8. [Responsive Design with MediaQuery & LayoutBuilder](#responsive-design-with-mediaquery--layoutbuilder)
+9. [Reusable Custom Widgets](#reusable-custom-widgets)
+10. [State Management with setState](#state-management-with-setstate)
+11. [User Input Forms](#user-input-forms)
+12. [Scrollable Views (ListView & GridView)](#scrollable-views-listview--gridview)
+13. [Responsive Layout Design](#responsive-layout-design)
+14. [Multi-Screen Navigation](#multi-screen-navigation)
+15. [Stateless vs Stateful Widgets](#stateless-vs-stateful-widgets)
+16. [Widget Tree Concept](#widget-tree-concept)
+17. [Reactive UI Model](#reactive-ui-model)
+18. [Setup Steps Documentation](#setup-steps-documentation)
+19. [Setup Verification](#setup-verification)
+20. [Folder Structure Explanation](#folder-structure-explanation)
+21. [Why Understanding Project Structure Matters](#why-understanding-project-structure-matters)
+22. [Flutter Development Tools](#flutter-development-tools)
+23. [Reflection](#reflection)
+24. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -116,13 +117,13 @@ main()
   → runApp(SmartQueueApp(firebaseReady: …))
 ```
 
-- If initialization **succeeds**, `firebaseReady` is `true` and the app uses the auth gate (`LoginScreenV2` / `VendorDashboardV2`).
+- If initialization **succeeds**, `firebaseReady` is `true` and the app uses the auth gate (`AuthScreen` / `VendorDashboardV2`).
 - If it **fails**, the app shows `WelcomeScreen` so you can still explore UI demos; open **Firebase connection status** from that screen to see the failure state.
 
 ### Verifying the connection in the UI
 
 1. Run the app on a device or emulator with a valid `google-services.json` and matching `firebase_options.dart`.
-2. On the **login** screen, tap **Firebase connection status** or **FlutterFire CLI demo** (shown when Core initialized).
+2. On **`AuthScreen`**, tap **Firebase connection status** or **FlutterFire CLI demo** (shown when Core initialized).
 3. You should see **SmartQueue connected to Firebase successfully** (connection demo) or **FlutterFire-style config is active** (CLI demo), plus read-only fields such as **Project ID** where applicable.
 
 ### Visual evidence
@@ -250,7 +251,7 @@ The generated `lib/firebase_options.dart` in this repository is the file Flutter
 
 - **File**: `lib/screens/flutterfire_cli_demo.dart` (`FlutterfireCliDemoScreen`).
 - **Purpose**: Confirms that Firebase Core initialized successfully and surfaces a **read-only** summary of the FlutterFire-style setup (including a simulated terminal snippet of the usual commands).
-- **How to open**: On the login screen, tap **FlutterFire CLI demo** (when Firebase initialized). From the welcome screen (offline mode), the same label opens the demo to inspect failure hints.
+- **How to open**: On **`AuthScreen`**, use **FlutterFire CLI** / **Firebase status** (when Core initialized). From **Welcome** (offline mode), the same labels open the demos to inspect failure hints.
 
 No Authentication, Firestore queries, Analytics events, or FCM are implemented in this task—only **SDK readiness** and documentation.
 
@@ -273,6 +274,66 @@ No Authentication, Firestore queries, Analytics events, or FCM are implemented i
 - **How FlutterFire CLI simplifies setup**: It removes guesswork by generating `firebase_options.dart` and aligning native config files with the Firebase Console, which is faster and safer than copying keys manually.
 - **CLI vs manual**: Manual setup works but scales poorly across platforms and teams; the CLI encodes best practices and matches official FlutterFire documentation.
 - **Typical challenges**: `firebase login` must be interactive in a real terminal; `flutterfire` not on PATH after `dart pub global activate` (add pub-cache `bin` to PATH); package name / bundle ID mismatch with the Console (fix app registration or `applicationId`). This project catches initialization failures so you can still open demo screens and fix config.
+
+---
+
+## Firebase Authentication (Email & Password)
+
+### Overview
+
+SmartQueue uses **Firebase Authentication** with **Email/Password** only (no Google, OTP, or phone flows in this module). The main UI is `lib/screens/auth_screen.dart` (`AuthScreen`): one screen with a **login / sign-up toggle**, validated fields, and feedback via snackbars. Session handling uses `FirebaseAuth.instance.authStateChanges()` in `lib/main.dart` (`_AuthGate`): signed-in users see `VendorDashboardV2`; signed-out users see `AuthScreen`. **Logout** is available from the vendor dashboard app bar and calls `AuthService.signOut()`.
+
+**Service layer**: `lib/services/auth_service.dart` — `signIn`, `signUp`, `signOut`, `userFacingMessage` for readable errors.
+
+### Enable Email/Password in Firebase Console (beginner steps)
+
+1. Open [Firebase Console](https://console.firebase.google.com) and select your project.
+2. In the left menu, go to **Build → Authentication**.
+3. Open the **Sign-in method** tab.
+4. Click **Email/Password**.
+5. Enable the first toggle (**Email/Password**) and click **Save**.  
+   (Leave “Email link (passwordless sign-in)” off unless you implement it later.)
+6. New users will appear under **Authentication → Users** after they sign up from the app.
+
+### Dependencies
+
+- `firebase_core` — initialized before `runApp` (see [Firebase Setup](#firebase-setup-and-connection)).
+- `firebase_auth` — declared in `pubspec.yaml`; run `flutter pub get` after changes.
+
+### Login and sign-up flow
+
+| Step | What happens |
+|------|----------------|
+| **Sign up** | User switches to **Sign up**, enters email, password, confirm password → `createUserWithEmailAndPassword` → Firebase creates the user and signs them in by default → `_AuthGate` shows the dashboard. |
+| **Log in** | User stays on **Log in**, enters credentials → `signInWithEmailAndPassword` → stream emits user → dashboard. |
+| **Validation** | Email format and non-empty fields; password minimum length **6** (Firebase requirement); confirm password must match on sign-up. |
+| **Errors** | `FirebaseAuthException` codes are mapped to short messages via `AuthService.userFacingMessage`. |
+| **Success** | Green snackbars (root messenger) confirm sign-in or account creation. |
+| **Logout** | Dashboard **logout** icon → `signOut()` → stream emits `null` → `AuthScreen` again. |
+
+### Auth state
+
+`StreamBuilder` on `authStateChanges` avoids manual navigation after login/logout: the tree **reacts** to Firebase auth state. A global `rootScaffoldMessengerKey` (`lib/core/root_messenger.dart`) is attached to `MaterialApp` so success snackbars still show when the auth screen is replaced by the dashboard.
+
+### Visual evidence
+
+> **Screenshot Placeholder**: [Insert screenshot – SmartQueue Login (`AuthScreen`)]
+>
+> *Shows gradient header, email/password fields, and Log in button.*
+
+> **Screenshot Placeholder**: [Insert screenshot – SmartQueue Sign Up mode]
+>
+> *Shows confirm password and Create account.*
+
+> **Screenshot Placeholder**: [Insert screenshot – Firebase Console → Authentication → Users]
+>
+> *Shows registered email accounts.*
+
+### Authentication reflection
+
+- **How Firebase simplifies auth**: No custom password storage, token issuance, or session tables—Firebase handles credentials securely and exposes `User` + streams to Flutter.
+- **Benefits vs a custom backend**: Less server code, built-in account recovery hooks (if you enable them later), scalable infrastructure, and rules that pair naturally with Firestore for order data.
+- **Challenges**: Email/Password must be turned on in the Console (`operation-not-allowed` otherwise); weak passwords return `weak-password`; testing requires a real or emulated device with network access. The app surfaces these as friendly snackbar text.
 
 ---
 
